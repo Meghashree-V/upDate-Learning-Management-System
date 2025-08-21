@@ -67,5 +67,5 @@ npm run dev
 
 This project is licensed under the MIT License . Feel free to use, modify, and share!
 
-Built with ❤️ by upDate educational pvt. Ltd. & upDate Intern team  Contributors.
+Built with ❤️ by upDt educational pvt. Ltd. & upDate Intern team  Contributors.
 
