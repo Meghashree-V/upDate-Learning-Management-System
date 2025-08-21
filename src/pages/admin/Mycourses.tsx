@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Search,
   Filter,
   Plus,
@@ -31,101 +41,40 @@ import {
   Trash,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Mycourses = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const courses = [
-    {
-      id: 1,
-      title: "React Development Masterclass",
-      category: "Web Development",
-      status: "published",
-      enrollments: 342,
-      rating: 4.8,
-      revenue: 15680,
-      duration: 40,
-      lessons: 28,
-      lastUpdated: "2024-01-15",
-      thumbnail: "/placeholder.svg",
-      instructor: "John Smith",
-      price: 99.99,
-      completionRate: 85,
-    },
-    {
-      id: 2,
-      title: "Python for Data Science",
-      category: "Data Science",
-      status: "published",
-      enrollments: 289,
-      rating: 4.7,
-      revenue: 12450,
-      duration: 35,
-      lessons: 24,
-      lastUpdated: "2024-01-10",
-      thumbnail: "/placeholder.svg",
-      instructor: "Dr. Sarah Johnson",
-      price: 89.99,
-      completionRate: 78,
-    },
-    {
-      id: 3,
-      title: "UI/UX Design Fundamentals",
-      category: "Design",
-      status: "draft",
-      enrollments: 0,
-      rating: 0,
-      revenue: 0,
-      duration: 25,
-      lessons: 18,
-      lastUpdated: "2024-01-12",
-      thumbnail: "/placeholder.svg",
-      instructor: "Emily Chen",
-      price: 79.99,
-      completionRate: 0,
-    },
-    {
-      id: 4,
-      title: "Digital Marketing Strategy",
-      category: "Marketing",
-      status: "published",
-      enrollments: 156,
-      rating: 4.6,
-      revenue: 8736,
-      duration: 30,
-      lessons: 22,
-      lastUpdated: "2024-01-08",
-      thumbnail: "/placeholder.svg",
-      instructor: "Michael Rodriguez",
-      price: 69.99,
-      completionRate: 92,
-    },
-    {
-      id: 5,
-      title: "Machine Learning Basics",
-      category: "Data Science",
-      status: "review",
-      enrollments: 0,
-      rating: 0,
-      revenue: 0,
-      duration: 45,
-      lessons: 32,
-      lastUpdated: "2024-01-14",
-      thumbnail: "/placeholder.svg",
-      instructor: "Dr. Sarah Johnson",
-      price: 119.99,
-      completionRate: 0,
-    },
-  ];
+  // 🔒 for AlertDialog
+  const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/courses");
+        setCourses(res.data);
+      } catch (err) {
+        console.error("Error fetching courses:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   const categories = ["Web Development", "Data Science", "Design", "Marketing", "Mobile Development"];
 
   const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.instructor?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === "all" || course.status === filterStatus;
     const matchesCategory = filterCategory === "all" || course.category === filterCategory;
     return matchesSearch && matchesStatus && matchesCategory;
@@ -133,10 +82,10 @@ const Mycourses = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "published": return "bg-success text-success-foreground";
-      case "draft": return "bg-muted text-muted-foreground";
-      case "review": return "bg-warning text-warning-foreground";
-      default: return "bg-muted text-muted-foreground";
+      case "published": return "bg-green-100 text-green-800";
+      case "draft": return "bg-gray-200 text-gray-800";
+      case "review": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-200 text-gray-800";
     }
   };
 
@@ -149,6 +98,29 @@ const Mycourses = () => {
     }
   };
 
+  // 🧹 delete confirmed (called from AlertDialog "Delete")
+  const handleConfirmDelete = async () => {
+    if (!deleteCourseId) return;
+    try {
+      setDeleting(true);
+      await axios.delete(`http://localhost:5000/api/courses/${deleteCourseId}`);
+      setCourses(prev => prev.filter(c => c._id !== deleteCourseId));
+      setDeleteCourseId(null);
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      alert("Failed to delete the course. Please try again.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-muted-foreground">Loading courses...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -158,7 +130,7 @@ const Mycourses = () => {
             Manage and track your course content
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => navigate('/admin/addcourses')}
           className="bg-primary hover:bg-primary-hover"
         >
@@ -185,9 +157,11 @@ const Mycourses = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Enrollments</p>
-                <p className="text-2xl font-bold">{courses.reduce((sum, course) => sum + course.enrollments, 0)}</p>
+                <p className="text-2xl font-bold">
+                  {courses.reduce((sum, course) => sum + (course.enrollments || 0), 0)}
+                </p>
               </div>
-              <Users className="h-8 w-8 text-success" />
+              <Users className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -196,9 +170,11 @@ const Mycourses = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold">${courses.reduce((sum, course) => sum + course.revenue, 0).toLocaleString()}</p>
+                <p className="text-2xl font-bold">
+                  ${courses.reduce((sum, course) => sum + (course.revenue || 0), 0).toLocaleString()}
+                </p>
               </div>
-              <DollarSign className="h-8 w-8 text-warning" />
+              <DollarSign className="h-8 w-8 text-yellow-600" />
             </div>
           </CardContent>
         </Card>
@@ -208,8 +184,11 @@ const Mycourses = () => {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Avg. Rating</p>
                 <p className="text-2xl font-bold">
-                  {(courses.filter(c => c.rating > 0).reduce((sum, course) => sum + course.rating, 0) / 
-                    courses.filter(c => c.rating > 0).length || 0).toFixed(1)}
+                  {(
+                    courses.filter(c => (c.rating || 0) > 0)
+                      .reduce((sum, course) => sum + (course.rating || 0), 0) /
+                      (courses.filter(c => (c.rating || 0) > 0).length || 1)
+                  ).toFixed(1)}
                 </p>
               </div>
               <Star className="h-8 w-8 text-primary" />
@@ -256,107 +235,116 @@ const Mycourses = () => {
           </div>
         </CardContent>
       </Card>
-
       {/* Courses Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCourses.map((course) => (
-          <Card key={course.id} className="shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="aspect-video bg-muted rounded-lg mb-3 flex items-center justify-center">
-                <span className="text-muted-foreground">Course Thumbnail</span>
-              </div>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg line-clamp-2">{course.title}</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">{course.instructor}</p>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">
-                      <Trash className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Badge className={getStatusColor(course.status)}>
-                  {getStatusText(course.status)}
-                </Badge>
-                <Badge variant="outline">{course.category}</Badge>
-              </div>
+      {filteredCourses.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <Search className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-semibold">No courses found</h3>
+          <p className="text-muted-foreground mb-4">
+            Try adjusting your search or filters
+          </p>
+          <Button onClick={() => navigate('/admin/addcourses')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Course
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredCourses.map((course) => (
+            <Card key={course._id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <img
+                src={`http://localhost:5000${course.thumbnail.startsWith("/") ? course.thumbnail : "/" + course.thumbnail}`}
+                alt={course.title}
+                className="w-full h-48 object-cover rounded-t-xl"
+              />
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span>{course.enrollments} students</span>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="line-clamp-2">{course.title}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{course.instructor || "Unknown"}</p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => navigate(`/courses/${course._id}`)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/admin/editcourse/${course._id}`)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => setDeleteCourseId(course._id)}
+                      >
+                        <Trash className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span>{course.duration}h content</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  <span>${course.price}</span>
-                </div>
-                {course.rating > 0 && (
+              </CardHeader>
+
+              <CardContent>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-warning fill-warning" />
-                    <span>{course.rating}</span>
+                    <Users className="h-4 w-4" />
+                    {course.enrollments || 0}
                   </div>
-                )}
-              </div>
-
-              {course.status === "published" && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Completion Rate</span>
-                    <span>{course.completionRate}%</span>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    {course.duration || "N/A"}
                   </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-primary h-2 rounded-full" 
-                      style={{ width: `${course.completionRate}%` }}
-                    ></div>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4" />
+                    {course.rating || 0}
                   </div>
                 </div>
-              )}
-
-              <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t">
-                <span>{course.lessons} lessons</span>
-                <span>Updated {new Date(course.lastUpdated).toLocaleDateString()}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredCourses.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <p className="text-muted-foreground">No courses found matching your criteria.</p>
-          </CardContent>
-        </Card>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold">${course.price || 0}</span>
+                  <Badge className={getStatusColor(course.status)}>
+                    {getStatusText(course.status)}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
+
+      {/* Delete Confirmation Dialog (shadcn/ui) */}
+      <AlertDialog open={!!deleteCourseId} onOpenChange={(open) => !open && setDeleteCourseId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Course</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this course? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting} onClick={() => setDeleteCourseId(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleting}
+              onClick={handleConfirmDelete}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
