@@ -40,7 +40,7 @@ upDate-Learning-Management-System/
 ⚡ Getting Started
 
 1️⃣ Clone the repository
-```bash
+
 git clone https://github.com/Meghashree-V/upDate-Learning-Management-System.git
 cd upDate-Learning-Management-System
 
