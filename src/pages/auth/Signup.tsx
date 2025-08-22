@@ -60,7 +60,17 @@ const Signup = () => {
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <BookOpen className="h-8 w-8 text-primary mr-2" />
+            <img
+              src="/logo.png"
+              alt="upDate logo"
+              className="h-8 w-8 object-contain mr-2"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (target.src !== window.location.origin + '/placeholder.svg') {
+                  target.src = '/placeholder.svg';
+                }
+              }}
+            />
             <span className="text-2xl font-bold text-foreground">upDate</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Join upDate</h1>

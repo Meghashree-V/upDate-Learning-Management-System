@@ -30,9 +30,20 @@ const SignIn = () => {
         email: formData.email,
         password: formData.password,
       });
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.role);
-      // Default to student landing
+      const role = (data?.role || '').toLowerCase();
+      // Block admins from signing in via user route
+      if (role === 'admin') {
+        // Ensure no user token is stored in the user context
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        alert('Admin accounts must sign in from the Admin portal. Redirecting...');
+        navigate('/admin/signin');
+        return;
+      }
+
+      // Normal user flow
+      if (data?.token) localStorage.setItem('token', data.token);
+      if (data?.role) localStorage.setItem('role', data.role);
       navigate('/student');
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Sign in failed';
@@ -45,7 +56,17 @@ const SignIn = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <BookOpen className="h-8 w-8 text-primary mr-2" />
+            <img
+              src="/logo.png"
+              alt="upDate logo"
+              className="h-8 w-8 object-contain mr-2"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (target.src !== window.location.origin + '/placeholder.svg') {
+                  target.src = '/placeholder.svg';
+                }
+              }}
+            />
             <span className="text-2xl font-bold text-foreground">upDate</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
