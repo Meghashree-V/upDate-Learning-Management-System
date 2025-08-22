@@ -167,9 +167,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                         <SelectValue placeholder="Select instructor" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="john">John Smith</SelectItem>
-                        <SelectItem value="sarah">Sarah Johnson</SelectItem>
-                        <SelectItem value="mike">Mike Wilson</SelectItem>
+                        <SelectItem value="none" disabled>No instructors available</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

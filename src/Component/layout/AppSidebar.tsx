@@ -8,9 +8,8 @@ import {
   BarChart3,
   Settings,
   HelpCircle,
-  Plus,
-  UserPlus,
   BookPlus,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
@@ -56,7 +55,6 @@ const managementItems = [
     icon: Users,
     subItems: [
       { title: "Students Enrolled", url: "/admin/studentsenrolled", icon: Users },
-      { title: "Add Student", url: "/admin/add-student", icon: UserPlus },
     ],
   },
 ];
@@ -74,6 +72,11 @@ const systemItems = [
     title: "Settings",
     url: "/admin/settings",
     icon: Settings,
+  },
+  {
+    title: "Notifications",
+    url: "/admin/notifications",
+    icon: Bell,
   },
   {
     title: "Help & Support",

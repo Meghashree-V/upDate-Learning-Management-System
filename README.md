@@ -1,3 +1,78 @@
+# upDate LMS
+
+An industry-oriented Learning Management System built with React 18, TypeScript, Vite, Tailwind CSS, and shadcn/ui on the frontend, and Express + MongoDB (Mongoose) on the backend.
+
+## Features
+
+- Multi-role: Students, Admins/Educators
+- Course browsing, enrollment, player, certificates
+- Quizzes (scaffolding present), analytics, reporting
+- File uploads (Multer), dashboard pages
+
+## Tech Stack
+
+- Frontend: React 18 + TypeScript + Vite
+- UI: shadcn/ui (Radix UI), Tailwind CSS
+- Routing: React Router DOM (v6/v7 future flags)
+- State: TanStack React Query
+- Backend: Express + Mongoose (MongoDB Atlas)
+
+## Monorepo structure
+
+- `src/` — frontend app (Vite)
+- `server/` — backend API (Express + Mongoose)
+
+## Getting started
+
+1) Install dependencies (root installs both workspaces if configured):
+
+```bash
+npm i
+```
+
+2) Create environment files based on examples:
+
+- Frontend: copy `.env.example` to `.env` and fill as needed.
+- Backend: copy `server/.env.example` to `server/.env` and set:
+  - `MONGODB_URI` — Atlas SRV connection string
+  - Other required server variables
+
+3) Run development servers:
+
+```bash
+# Frontend (Vite)
+npm run dev
+
+# Backend (Express)
+npm run server:dev
+```
+
+Common scripts (see `package.json`):
+
+- `dev` — start Vite dev server
+- `build` — Vite build
+- `preview` — preview built frontend
+- `server:dev` — start backend with nodemon/ts-node (if configured)
+- `lint` — run ESLint
+
+## Centralized course data (frontend)
+
+- All course-related UI must consume data from `src/data/courses.ts`.
+- Utilities: `getCourseById`, `getFeaturedCourses`, `getCoursesByCategory`.
+- Populate `courses` array to see lists/detail pages render.
+
+## Backend notes
+
+- Ensure your current IP is whitelisted in MongoDB Atlas Network Access.
+- Verify `MONGODB_URI` user credentials and access. TLS inspection/firewalls can cause SSL/TLS errors.
+
+## Troubleshooting
+
+- React Router warnings: v7 future flags enabled in `src/App.tsx`.
+- MongoDB connection issues: check Atlas IP whitelist and credentials.
+
+---
+
 # Welcome to your Lovable project
 
 ## Project info

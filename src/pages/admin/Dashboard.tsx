@@ -44,32 +44,7 @@ const Dashboard = () => {
     },
   ];
 
-  const recentActivity = [
-    {
-      user: "John Doe",
-      action: "enrolled in",
-      course: "Advanced React Development",
-      time: "2 hours ago",
-    },
-    {
-      user: "Sarah Wilson",
-      action: "completed",
-      course: "JavaScript Fundamentals",
-      time: "4 hours ago",
-    },
-    {
-      user: "Mike Johnson",
-      action: "started",
-      course: "UI/UX Design Principles",
-      time: "6 hours ago",
-    },
-    {
-      user: "Emma Brown",
-      action: "enrolled in",
-      course: "Data Science Basics",
-      time: "8 hours ago",
-    },
-  ];
+  const recentActivity = [];
 
   const topCourses = [
     {
@@ -144,26 +119,32 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Users className="h-4 w-4 text-primary" />
+              {recentActivity.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-2">
+                  No recent activity to display.
+                </p>
+              ) : (
+                recentActivity.map((activity, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Users className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm">
+                          <span className="font-medium">{activity.user}</span>{" "}
+                          {activity.action}{" "}
+                          <span className="font-medium">{activity.course}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm">
-                        <span className="font-medium">{activity.user}</span>{" "}
-                        {activity.action}{" "}
-                        <span className="font-medium">{activity.course}</span>
-                      </p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {activity.time}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {activity.time}
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

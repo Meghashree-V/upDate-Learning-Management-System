@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Search, User, ChevronDown, BookOpen, Code, Palette, TrendingUp, Globe, Zap } from "lucide-react";
+import { Search, User, ChevronDown, BookOpen, Code, Palette, TrendingUp, Globe, Zap, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -96,11 +96,16 @@ const Navber = () => {
             </form>
           </div>
 
-          {/* Profile */}
+          {/* Notifications + Profile */}
           <div className="flex items-center space-x-4">
             <Link to="/student/myenrollments">
               <Button variant="ghost" className="hover:bg-lms-red-light">
                 My Learning
+              </Button>
+            </Link>
+            <Link to="/student/notifications">
+              <Button variant="ghost" size="sm" className="rounded-full hover:bg-lms-red-light" aria-label="Notifications">
+                <Bell className="w-5 h-5" />
               </Button>
             </Link>
             
@@ -122,7 +127,7 @@ const Navber = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link to="/settings" className="w-full">
+                  <Link to="/student/settings" className="w-full">
                     Settings
                   </Link>
                 </DropdownMenuItem>

@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, Mail, Lock, BookOpen } from 'lucide-react';
+import api from '@/lib/api';
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,6 +14,7 @@ const SignIn = () => {
     email: '',
     password: ''
   });
+  const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -21,10 +23,21 @@ const SignIn = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt:', formData);
+    try {
+      const { data } = await api.post('/auth/signin', {
+        email: formData.email,
+        password: formData.password,
+      });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.role);
+      // Default to student landing
+      navigate('/student');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Sign in failed';
+      alert(msg);
+    }
   };
 
   return (
@@ -163,8 +176,13 @@ const SignIn = () => {
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{' '}
-                <Link to="/signup" className="text-primary hover:underline font-medium">
+                <Link to="/Signup" className="text-primary hover:underline font-medium">
                   Sign up
+                </Link>
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                <Link to="/admin/signin" className="text-primary hover:underline font-medium">
+                  Sign in as Admin
                 </Link>
               </p>
             </div>
