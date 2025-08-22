@@ -21,6 +21,8 @@ const courseSchema = new mongoose.Schema(
     categories: [String],
     lessons: [lessonSchema],
     thumbnail: String,
+    // NEW FIELD: is the course free?
+    isFree: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

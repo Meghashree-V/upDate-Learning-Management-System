@@ -16,6 +16,7 @@ export const createCourse = async (req, res) => {
       endDate,
       categories,
       lessons,
+      isFree // 👈 new field
     } = req.body;
 
     // Parse arrays (because they come as JSON strings from FormData)
@@ -38,6 +39,8 @@ export const createCourse = async (req, res) => {
       categories: parsedCategories,
       lessons: parsedLessons,
       thumbnail: thumbnailPath,
+       isFree: isFree === "true" || isFree === true, // convert string to boolean 
+       
     });
 
     await newCourse.save();
