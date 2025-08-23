@@ -12,15 +12,41 @@ import {
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter } from 'lucide-react';
-import { courses, categories } from '@/data/courses';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const Courses = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filteredCourses, setFilteredCourses] = useState(courses);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  // Fetch courses from backend
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const res = await fetch(`${API_BASE_URL}/api/courses`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch courses: ${res.status} ${res.statusText}`);
+        }
+        const data = await res.json();
+        setCourses(Array.isArray(data) ? data : []);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message || 'Something went wrong while fetching courses.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   // Get category from URL params
   useEffect(() => {
@@ -29,10 +55,9 @@ const Courses = () => {
       setSelectedCategory(categoryParam);
     }
   }, [searchParams]);
-
   // Filter courses based on all criteria
   useEffect(() => {
-    let filtered = courses;
+    let filtered = [...courses];
 
     // Search filter
     if (searchTerm) {
@@ -45,8 +70,11 @@ const Courses = () => {
 
     // Category filter
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(course => course.category === selectedCategory);
+      filtered = filtered.filter(course => 
+        Array.isArray(course.categories) && course.categories.includes(selectedCategory)
+      );
     }
+
 
     // Level filter
     if (selectedLevel !== 'all') {
@@ -61,8 +89,7 @@ const Courses = () => {
     }
 
     setFilteredCourses(filtered);
-  }, [searchTerm, selectedCategory, selectedLevel, priceFilter]);
-
+  }, [courses, searchTerm, selectedCategory, selectedLevel, priceFilter]);
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategory('all');
@@ -77,7 +104,6 @@ const Courses = () => {
     selectedLevel !== 'all' ? selectedLevel : null,
     priceFilter !== 'all' ? priceFilter : null
   ].filter(Boolean).length;
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -106,7 +132,6 @@ const Courses = () => {
               className="pl-10"
             />
           </div>
-
           {/* Filter Controls */}
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex items-center space-x-2">
@@ -120,7 +145,10 @@ const Courses = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
+                {/* You can replace the below categories with dynamic ones from backend if needed */}
+                {['Programming', 'Design', 'Marketing', 'Business', 'Data Science', 
+                  'Mobile Development', 'Web Development', 'AI/ML', 'DevOps', 'Cybersecurity']
+                  .map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
                   </SelectItem>
@@ -162,20 +190,27 @@ const Courses = () => {
               </div>
             )}
           </div>
+
         </div>
 
-        {/* Results */}
+        {/* Results Info */}
         <div className="mb-6">
-          <p className="text-muted-foreground">
-            Showing {filteredCourses.length} of {courses.length} courses
-          </p>
+          {loading ? (
+            <p className="text-center text-muted-foreground">Loading courses...</p>
+          ) : error ? (
+            <p className="text-center text-red-600">{error}</p>
+          ) : (
+            <p className="text-muted-foreground">
+              Showing {filteredCourses.length} of {courses.length} courses
+            </p>
+          )}
         </div>
 
         {/* Courses Grid */}
-        {filteredCourses.length > 0 ? (
+        {loading || error ? null : filteredCourses.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredCourses.map((course) => (
-              <CourseCard key={course.id} {...course} />
+              <CourseCard key={course._id || course.id} {...course} />
             ))}
           </div>
         ) : (

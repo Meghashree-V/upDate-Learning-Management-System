@@ -4,23 +4,33 @@ import { Button } from '@/components/ui/button';
 import { Star, Clock, Users, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
 interface CourseCardProps {
-  id: string;
+  // Original props (kept for compatibility)
+  id?: string;
   title: string;
   instructor: string;
-  rating: number;
-  students: number;
+  rating?: number;
+  students?: number;
   duration: string;
   price: number;
   originalPrice?: number;
-  image: string;
-  category: string;
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  image?: string;
+  category?: string;
+  level?: 'Beginner' | 'Intermediate' | 'Advanced' | string;
   isFree?: boolean;
+
+  // Backend (MongoDB) props
+  _id?: string;
+  thumbnail?: string;       // e.g. "/uploads/abc.jpg"
+  categories?: string[];    // array of category names
+  capacity?: number;        // optional, if you want to show as students
 }
 
 export const CourseCard = ({
   id,
+  _id,
   title,
   instructor,
   rating,
@@ -30,33 +40,56 @@ export const CourseCard = ({
   originalPrice,
   image,
   category,
-  level,
-  isFree = false
+  level = 'Beginner',
+  isFree,
+  thumbnail,
+  categories = [],
+  capacity,
 }: CourseCardProps) => {
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
 
+  // Prefer backend thumbnail; fall back to provided image prop
+  const imageSrc = thumbnail ? `${API_BASE_URL}${thumbnail}` : image || '';
+
+  // Prefer single string category; else first from categories[]
+  const categoryLabel =
+    category || (Array.isArray(categories) && categories.length > 0 ? categories[0] : 'General');
+
+  // Determine free from price if not explicitly passed
+  const computedIsFree = typeof isFree === 'boolean' ? isFree : Number(price) === 0;
+
+  // Use backend capacity as students if students not provided
+  const studentsCount = typeof students === 'number' ? students : (capacity ?? 0);
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-card border-border overflow-hidden">
       <div className="relative overflow-hidden">
-        <img
-          src={image}
-          alt={title}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+        {imageSrc ? (
+          <img
+            src={imageSrc}
+            alt={title}
+            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-48 flex items-center justify-center bg-gray-100 text-gray-400">
+            No Image
+          </div>
+        )}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-        
+
         {/* Category Badge */}
         <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
-          {category}
+          {categoryLabel}
         </Badge>
-        
+
         {/* Level Badge */}
-        <Badge 
-          variant="secondary" 
+        <Badge
+          variant="secondary"
           className={`absolute top-3 right-3 ${
-            level === 'Beginner' ? 'bg-green-100 text-green-800' :
-            level === 'Intermediate' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-red-100 text-red-800'
+            level === 'Beginner'
+              ? 'bg-green-100 text-green-800'
+              : level === 'Intermediate'
+              ? 'bg-yellow-100 text-yellow-800'
+              : 'bg-red-100 text-red-800'
           }`}
         >
           {level}
@@ -75,16 +108,24 @@ export const CourseCard = ({
           <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors duration-200 line-clamp-2">
             {title}
           </h3>
-          
+
           <p className="text-muted-foreground text-sm">by {instructor}</p>
-          
+
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center space-x-1">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="font-medium">{rating}</span>
-              <span>({students.toLocaleString()})</span>
-            </div>
-            
+            {/* Show rating block only if rating is available */}
+            {typeof rating === 'number' ? (
+              <div className="flex items-center space-x-1">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <span className="font-medium">{rating}</span>
+                <span>({studentsCount.toLocaleString()})</span>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-1">
+                <Users className="h-4 w-4" />
+                <span>{studentsCount.toLocaleString()} enrolled</span>
+              </div>
+            )}
+
             <div className="flex items-center space-x-1">
               <Clock className="h-4 w-4" />
               <span>{duration}</span>
@@ -94,7 +135,7 @@ export const CourseCard = ({
           <div className="flex items-center space-x-2">
             <Users className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">
-              {students.toLocaleString()} students enrolled
+              {studentsCount.toLocaleString()} students enrolled
             </span>
           </div>
         </div>
@@ -102,9 +143,9 @@ export const CourseCard = ({
 
       <CardFooter className="p-6 pt-0 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          {isFree ? (
+          {computedIsFree ? (
             <span className="text-2xl font-bold text-green-600">Free</span>
-          ) : ( 
+          ) : (
             <>
               <span className="text-2xl font-bold text-foreground">₹{price}</span>
               {originalPrice && (
@@ -118,10 +159,15 @@ export const CourseCard = ({
             </>
           )}
         </div>
-        
+
+        {/* Keep your existing enroll flow; change only the Link wrapper (no nested <a>) */}
         <Link to={`/signin`}>
           <Button variant="cta" size="sm">
-            {isFree ? 'Enroll Free' : 'Enroll Now'}
+            <<<<<<< COURSE-CRUD
+                        {computedIsFree ? 'Enroll Free' : 'Enroll Now'}
+            =======
+                        {isFree ? 'Enroll Free' : 'Enroll Now'}
+            >>>>>>> main
           </Button>
         </Link>
       </CardFooter>
