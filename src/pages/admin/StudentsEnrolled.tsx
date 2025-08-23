@@ -52,85 +52,9 @@ const StudentsEnrolled = () => {
   const [filterCourse, setFilterCourse] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  const students = [
-    {
-      id: 1,
-      name: "Alice Johnson",
-      email: "alice.johnson@email.com",
-      course: "React Development Masterclass",
-      enrollDate: "2024-01-15",
-      progress: 85,
-      status: "active",
-      lastAccess: "2024-01-20",
-      completedLessons: 24,
-      totalLessons: 28,
-      grade: "A",
-      timeSpent: "32h 15m",
-      avatar: "/placeholder.svg",
-    },
-    {
-      id: 2,
-      name: "Bob Smith",
-      email: "bob.smith@email.com",
-      course: "Python for Data Science",
-      enrollDate: "2024-01-10",
-      progress: 62,
-      status: "active",
-      lastAccess: "2024-01-19",
-      completedLessons: 15,
-      totalLessons: 24,
-      grade: "B+",
-      timeSpent: "28h 45m",
-      avatar: "/placeholder.svg",
-    },
-    {
-      id: 3,
-      name: "Carol Davis",
-      email: "carol.davis@email.com",
-      course: "UI/UX Design Fundamentals",
-      enrollDate: "2024-01-08",
-      progress: 100,
-      status: "completed",
-      lastAccess: "2024-01-18",
-      completedLessons: 18,
-      totalLessons: 18,
-      grade: "A+",
-      timeSpent: "22h 30m",
-      avatar: "/placeholder.svg",
-    },
-    {
-      id: 4,
-      name: "David Wilson",
-      email: "david.wilson@email.com",
-      course: "Digital Marketing Strategy",
-      enrollDate: "2024-01-12",
-      progress: 35,
-      status: "inactive",
-      lastAccess: "2024-01-16",
-      completedLessons: 8,
-      totalLessons: 22,
-      grade: "C",
-      timeSpent: "12h 20m",
-      avatar: "/placeholder.svg",
-    },
-    {
-      id: 5,
-      name: "Eva Martinez",
-      email: "eva.martinez@email.com",
-      course: "React Development Masterclass",
-      enrollDate: "2024-01-14",
-      progress: 92,
-      status: "active",
-      lastAccess: "2024-01-20",
-      completedLessons: 26,
-      totalLessons: 28,
-      grade: "A",
-      timeSpent: "35h 10m",
-      avatar: "/placeholder.svg",
-    },
-  ];
+  const students: any[] = [];
 
-  const courses = ["React Development Masterclass", "Python for Data Science", "UI/UX Design Fundamentals", "Digital Marketing Strategy"];
+  const courses: string[] = [];
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -212,7 +136,7 @@ const StudentsEnrolled = () => {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Avg. Progress</p>
                 <p className="text-2xl font-bold">
-                  {Math.round(students.reduce((sum, s) => sum + s.progress, 0) / students.length)}%
+                  {students.length ? Math.round(students.reduce((sum, s) => sum + s.progress, 0) / students.length) : 0}%
                 </p>
               </div>
               <Clock className="h-8 w-8 text-primary" />

@@ -5,47 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Play, Clock, Award, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const enrolledCourses = [
-  {
-    id: 1,
-    title: "Complete React Development Bootcamp",
-    instructor: "Sarah Johnson",
-    progress: 65,
-    totalLessons: 45,
-    completedLessons: 29,
-    timeSpent: "28h 30m",
-    lastAccessed: "2 hours ago",
-    image: "/api/placeholder/300/200",
-    category: "Web Development",
-    status: "In Progress"
-  },
-  {
-    id: 2,
-    title: "UI/UX Design Masterclass",
-    instructor: "David Kim",
-    progress: 100,
-    totalLessons: 32,
-    completedLessons: 32,
-    timeSpent: "32h 15m",
-    lastAccessed: "1 week ago",
-    image: "/api/placeholder/300/200",
-    category: "Design",
-    status: "Completed"
-  },
-  {
-    id: 3,
-    title: "Python for Data Science",
-    instructor: "Dr. Maria Rodriguez",
-    progress: 25,
-    totalLessons: 56,
-    completedLessons: 14,
-    timeSpent: "12h 45m",
-    lastAccessed: "3 days ago",
-    image: "/api/placeholder/300/200",
-    category: "Data Science",
-    status: "In Progress"
-  }
-];
+const enrolledCourses: Array<{
+  id: number;
+  title: string;
+  instructor: string;
+  progress: number;
+  totalLessons: number;
+  completedLessons: number;
+  timeSpent: string;
+  lastAccessed: string;
+  image: string;
+  category: string;
+  status: string;
+}> = [];
 
 const MyEnrollments = () => {
   const inProgressCourses = enrolledCourses.filter(course => course.status === "In Progress");
@@ -101,7 +73,7 @@ const MyEnrollments = () => {
             <div className="flex items-center space-x-2">
               <Clock className="w-8 h-8 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">73h</p>
+                <p className="text-2xl font-bold">0h</p>
                 <p className="text-sm text-muted-foreground">Total Time</p>
               </div>
             </div>

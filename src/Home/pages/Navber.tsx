@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Search, User, ChevronDown, BookOpen, Code, Palette, TrendingUp, Globe, Zap } from "lucide-react";
+import { Search, User, ChevronDown, BookOpen, Code, Palette, TrendingUp, Globe, Zap, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -41,9 +41,17 @@ const Navber = () => {
           {/* Logo and Categories */}
           <div className="flex items-center space-x-8">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-white" />
-              </div>
+              <img
+                src="/logo.png"
+                alt="upDate logo"
+                className="h-8 w-8 object-contain"
+                onError={(e) => {
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (target.src !== window.location.origin + '/placeholder.svg') {
+                    target.src = '/placeholder.svg';
+                  }
+                }}
+              />
               <div>
                 <span className="text-xl font-bold text-red-600">upDate</span>
                 <p className="text-xs text-muted-foreground">Industry Oriented Learning</p>
@@ -96,11 +104,16 @@ const Navber = () => {
             </form>
           </div>
 
-          {/* Profile */}
+          {/* Notifications + Profile */}
           <div className="flex items-center space-x-4">
             <Link to="/student/myenrollments">
               <Button variant="ghost" className="hover:bg-lms-red-light">
                 My Learning
+              </Button>
+            </Link>
+            <Link to="/student/notifications">
+              <Button variant="ghost" size="sm" className="rounded-full hover:bg-lms-red-light" aria-label="Notifications">
+                <Bell className="w-5 h-5" />
               </Button>
             </Link>
             
@@ -122,7 +135,7 @@ const Navber = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link to="/settings" className="w-full">
+                  <Link to="/student/settings" className="w-full">
                     Settings
                   </Link>
                 </DropdownMenuItem>

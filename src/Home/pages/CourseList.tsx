@@ -5,93 +5,10 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Link, useSearchParams } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { courses as courseData, Course } from "@/data/courses";
 
-const courses = [
-  {
-    id: 1,
-    title: "Complete React Development Bootcamp",
-    instructor: "Sarah Johnson",
-    rating: 4.8,
-    students: 12543,
-    duration: "40h 30m",
-    price: "$89.99",
-    originalPrice: "$199.99",
-    image: "/api/placeholder/300/200",
-    category: "Web Development",
-    level: "Beginner",
-    description: "Learn React from scratch with hands-on projects and real-world applications."
-  },
-  {
-    id: 2,
-    title: "UI/UX Design Masterclass",
-    instructor: "David Kim",
-    rating: 4.9,
-    students: 8765,
-    duration: "32h 15m",
-    price: "$79.99",
-    originalPrice: "$149.99",
-    image: "/api/placeholder/300/200",
-    category: "Design",
-    level: "Intermediate",
-    description: "Master the principles of user interface and user experience design."
-  },
-  {
-    id: 3,
-    title: "Python for Data Science",
-    instructor: "Dr. Maria Rodriguez",
-    rating: 4.7,
-    students: 15432,
-    duration: "45h 20m",
-    price: "$99.99",
-    originalPrice: "$249.99",
-    image: "/api/placeholder/300/200",
-    category: "Data Science",
-    level: "Intermediate",
-    description: "Comprehensive Python course for data analysis and machine learning."
-  },
-  {
-    id: 4,
-    title: "Digital Marketing Strategy",
-    instructor: "Alex Thompson",
-    rating: 4.6,
-    students: 9876,
-    duration: "28h 45m",
-    price: "$69.99",
-    originalPrice: "$129.99",
-    image: "/api/placeholder/300/200",
-    category: "Marketing",
-    level: "Beginner",
-    description: "Learn effective digital marketing strategies for modern businesses."
-  },
-  {
-    id: 5,
-    title: "JavaScript Advanced Concepts",
-    instructor: "Emily Chen",
-    rating: 4.8,
-    students: 11234,
-    duration: "38h 10m",
-    price: "$94.99",
-    originalPrice: "$189.99",
-    image: "/api/placeholder/300/200",
-    category: "Web Development",
-    level: "Advanced",
-    description: "Deep dive into advanced JavaScript concepts and ES6+ features."
-  },
-  {
-    id: 6,
-    title: "Business Analytics Fundamentals",
-    instructor: "Michael Brown",
-    rating: 4.5,
-    students: 7654,
-    duration: "35h 30m",
-    price: "$84.99",
-    originalPrice: "$169.99",
-    image: "/api/placeholder/300/200",
-    category: "Business",
-    level: "Beginner",
-    description: "Learn to analyze business data and make data-driven decisions."
-  }
-];
+// Use centralized courses data
+const courses: Course[] = courseData;
 
 const CourseList = () => {
   const [searchParams] = useSearchParams();
@@ -127,7 +44,7 @@ const CourseList = () => {
         case "students":
           return b.students - a.students;
         case "price":
-          return parseFloat(a.price.replace("$", "")) - parseFloat(b.price.replace("$", ""));
+          return (a.price ?? 0) - (b.price ?? 0);
         default:
           return a.title.localeCompare(b.title);
       }
@@ -210,7 +127,7 @@ const CourseList = () => {
                 {course.description}
               </p>
               <p className="text-sm font-medium text-foreground mb-3">
-                by {course.instructor}
+                by {course.instructor || "Instructor"}
               </p>
 
               <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
@@ -230,8 +147,10 @@ const CourseList = () => {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xl font-bold text-primary">{course.price}</span>
-                  <span className="text-sm text-muted-foreground line-through">{course.originalPrice}</span>
+                  <span className="text-xl font-bold text-primary">₹{course.price}</span>
+                  {course.originalPrice !== undefined && (
+                    <span className="text-sm text-muted-foreground line-through">₹{course.originalPrice}</span>
+                  )}
                 </div>
               </div>
             </CardContent>

@@ -45,64 +45,20 @@ const Educator = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  const educators = [
-    {
-      id: 1,
-      name: "Dr. Sarah Johnson",
-      email: "sarah.johnson@update.com",
-      phone: "+1 (555) 123-4567",
-      specialization: "Data Science",
-      status: "active",
-      coursesCount: 8,
-      studentsCount: 342,
-      rating: 4.9,
-      joinDate: "2023-01-15",
-      avatar: "/placeholder.svg",
-      bio: "Expert in machine learning and data analytics with 10+ years of experience."
-    },
-    {
-      id: 2,
-      name: "John Smith",
-      email: "john.smith@update.com",
-      phone: "+1 (555) 234-5678",
-      specialization: "Web Development",
-      status: "active",
-      coursesCount: 12,
-      studentsCount: 567,
-      rating: 4.8,
-      joinDate: "2022-08-22",
-      avatar: "/placeholder.svg",
-      bio: "Full-stack developer with expertise in React, Node.js, and modern web technologies."
-    },
-    {
-      id: 3,
-      name: "Emily Chen",
-      email: "emily.chen@update.com",
-      phone: "+1 (555) 345-6789",
-      specialization: "UI/UX Design",
-      status: "inactive",
-      coursesCount: 6,
-      studentsCount: 234,
-      rating: 4.7,
-      joinDate: "2023-03-10",
-      avatar: "/placeholder.svg",
-      bio: "Creative designer focused on user experience and interface design."
-    },
-    {
-      id: 4,
-      name: "Michael Rodriguez",
-      email: "michael.r@update.com",
-      phone: "+1 (555) 456-7890",
-      specialization: "Digital Marketing",
-      status: "active",
-      coursesCount: 10,
-      studentsCount: 445,
-      rating: 4.6,
-      joinDate: "2022-11-05",
-      avatar: "/placeholder.svg",
-      bio: "Marketing strategist with extensive experience in digital campaigns and analytics."
-    },
-  ];
+  const educators: Array<{
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+    specialization: string;
+    status: "active" | "inactive";
+    coursesCount: number;
+    studentsCount: number;
+    rating: number;
+    joinDate: string;
+    avatar: string;
+    bio: string;
+  }> = [];
 
   const filteredEducators = educators.filter(educator => {
     const matchesSearch = educator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

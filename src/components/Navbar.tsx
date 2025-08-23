@@ -29,9 +29,17 @@ export const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary-hover rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">U</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="upDate logo"
+              className="h-8 w-8 object-contain"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (target.src !== window.location.origin + '/placeholder.svg') {
+                  target.src = '/placeholder.svg';
+                }
+              }}
+            />
             <span className="text-xl font-bold text-foreground">upDate</span>
           </Link>
 
@@ -77,7 +85,7 @@ export const Navbar = () => {
                 className="pl-10 pr-4 py-2 w-64 rounded-md border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
-             <Link to={"/Signin"}>
+            <Link to={"/Signin"}>
             <Button variant="outline">Sign In</Button>
             </Link>
             <Link to ={"/Signup"}>
