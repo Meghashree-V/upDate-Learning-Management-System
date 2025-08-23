@@ -27,6 +27,10 @@ import NotFound from "./pages/NotFound";
 import { AdminLayout } from "./Component/layout/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import AdminSignIn from "./pages/admin/AdminSignIn";
+import Users from "./pages/admin/users";
+import AddUser from "./pages/admin/AddUser";
+import EditUser from "./pages/admin/EditUser";
+
 
 const queryClient = new QueryClient();  
 
@@ -57,6 +61,12 @@ const App = () => (
           {/* Admin (essential only) */}
           <Route path="/admin/signin" element={<AdminSignIn />} />
           <Route path="/admin/dashboard" element={<AdminLayout><Dashboard /></AdminLayout>} />
+
+          {/* Admin Users CRUD */}
+          <Route path="/admin/users" element={<AdminLayout><Users /></AdminLayout>} />
+          <Route path="/admin/users/add" element={<AdminLayout><AddUser /></AdminLayout>} />
+          <Route path="/admin/users/edit/:id" element={<AdminLayout><EditUser /></AdminLayout>} />
+
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -58,3 +58,4 @@ Thumbs.db
 
 # Optional lockfiles (keep if you standardize on one)
 bun.lockb
+.env
