@@ -186,7 +186,10 @@ const Addcourses = () => {
                         <SelectValue placeholder="Select instructor" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none" disabled>No instructors available</SelectItem>
+                        {/* <SelectItem value="none" disabled>No instructors available</SelectItem> */}
+                        <SelectItem value="John Doe">John Doe</SelectItem>
+                        <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                        <SelectItem value="Alice Johnson">Alice Johnson</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

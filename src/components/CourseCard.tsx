@@ -164,6 +164,8 @@ export const CourseCard = ({
         <Link to={`/signin`}>
           <Button variant="cta" size="sm">
                         {computedIsFree ? 'Enroll Free' : 'Enroll Now'}
+                        {isFree ? 'Enroll Free' : 'Enroll Now'}
+
           </Button>
         </Link>
       </CardFooter>
