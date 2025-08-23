@@ -163,11 +163,8 @@ export const CourseCard = ({
         {/* Keep your existing enroll flow; change only the Link wrapper (no nested <a>) */}
         <Link to={`/signin`}>
           <Button variant="cta" size="sm">
-            <<<<<<< COURSE-CRUD
                         {computedIsFree ? 'Enroll Free' : 'Enroll Now'}
-            =======
                         {isFree ? 'Enroll Free' : 'Enroll Now'}
-            >>>>>>> main
           </Button>
         </Link>
       </CardFooter>
