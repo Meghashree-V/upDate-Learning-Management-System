@@ -17,9 +17,17 @@ export function Navber() {
       <div className="flex items-center gap-4">
         <SidebarTrigger />
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground font-bold text-sm">
-            U
-          </div>
+          <img
+            src="/logo.png"
+            alt="upDate logo"
+            className="h-8 w-8 object-contain"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement;
+              if (target.src !== window.location.origin + '/placeholder.svg') {
+                target.src = '/placeholder.svg';
+              }
+            }}
+          />
           <span className="text-xl font-bold text-primary">upDate</span>
           <Badge variant="outline" className="text-xs">Admin</Badge>
         </div>

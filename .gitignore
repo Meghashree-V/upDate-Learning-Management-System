@@ -22,3 +22,39 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example
+
+# Build outputs
+server/dist
+server/build
+
+# Caches
+.parcel-cache
+.cache
+**/.cache
+**/.next
+.turbo
+.eslintcache
+.stylelintcache
+.vite
+vite.config.ts.timestamp-*
+
+# Test coverage
+coverage
+
+# Local files/uploads
+uploads
+server/uploads
+
+# OS junk
+Thumbs.db
+
+# Optional lockfiles (keep if you standardize on one)
+bun.lockb

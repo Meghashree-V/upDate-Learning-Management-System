@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, Mail, Lock, BookOpen } from 'lucide-react';
+import api from '@/lib/api';
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,6 +14,7 @@ const SignIn = () => {
     email: '',
     password: ''
   });
+  const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -21,10 +23,32 @@ const SignIn = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt:', formData);
+    try {
+      const { data } = await api.post('/auth/signin', {
+        email: formData.email,
+        password: formData.password,
+      });
+      const role = (data?.role || '').toLowerCase();
+      // Block admins from signing in via user route
+      if (role === 'admin') {
+        // Ensure no user token is stored in the user context
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        alert('Admin accounts must sign in from the Admin portal. Redirecting...');
+        navigate('/admin/signin');
+        return;
+      }
+
+      // Normal user flow
+      if (data?.token) localStorage.setItem('token', data.token);
+      if (data?.role) localStorage.setItem('role', data.role);
+      navigate('/student');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Sign in failed';
+      alert(msg);
+    }
   };
 
   return (
@@ -32,7 +56,17 @@ const SignIn = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <BookOpen className="h-8 w-8 text-primary mr-2" />
+            <img
+              src="/logo.png"
+              alt="upDate logo"
+              className="h-8 w-8 object-contain mr-2"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (target.src !== window.location.origin + '/placeholder.svg') {
+                  target.src = '/placeholder.svg';
+                }
+              }}
+            />
             <span className="text-2xl font-bold text-foreground">upDate</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
@@ -163,8 +197,13 @@ const SignIn = () => {
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{' '}
-                <Link to="/signup" className="text-primary hover:underline font-medium">
+                <Link to="/Signup" className="text-primary hover:underline font-medium">
                   Sign up
+                </Link>
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                <Link to="/admin/signin" className="text-primary hover:underline font-medium">
+                  Sign in as Admin
                 </Link>
               </p>
             </div>

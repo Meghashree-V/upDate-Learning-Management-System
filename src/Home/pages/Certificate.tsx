@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const certificateData = {
-  studentName: "John Doe",
-  courseName: "Complete React Development Bootcamp",
-  instructor: "Sarah Johnson",
-  completionDate: "December 15, 2024",
-  certificateId: "UPD-REACT-2024-001234",
-  duration: "40 hours",
-  grade: "A+"
+  studentName: "",
+  courseName: "",
+  instructor: "",
+  completionDate: "",
+  certificateId: "",
+  duration: "",
+  grade: ""
 };
 
 const Certificate = () => {
@@ -43,24 +43,24 @@ const Certificate = () => {
                 <div className="text-center space-y-6 relative z-10">
                   <p className="text-lg text-muted-foreground">This is to certify that</p>
                   
-                  <h2 className="text-5xl font-bold text-foreground">{certificateData.studentName}</h2>
+                  <h2 className="text-5xl font-bold text-foreground">{certificateData.studentName || "Student Name"}</h2>
                   
                   <p className="text-lg text-muted-foreground">has successfully completed the course</p>
                   
-                  <h3 className="text-3xl font-semibold text-primary">{certificateData.courseName}</h3>
+                  <h3 className="text-3xl font-semibold text-primary">{certificateData.courseName || "Course Name"}</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-8">
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Course Duration</p>
-                      <p className="font-semibold text-lg">{certificateData.duration}</p>
+                      <p className="font-semibold text-lg">{certificateData.duration || "—"}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Grade Achieved</p>
-                      <p className="font-semibold text-lg text-green-600">{certificateData.grade}</p>
+                      <p className="font-semibold text-lg text-green-600">{certificateData.grade || "—"}</p>
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground">Completion Date</p>
-                      <p className="font-semibold text-lg">{certificateData.completionDate}</p>
+                      <p className="font-semibold text-lg">{certificateData.completionDate || "—"}</p>
                     </div>
                   </div>
                 </div>
@@ -69,8 +69,8 @@ const Certificate = () => {
                 <div className="flex justify-between items-end pt-12 relative z-10">
                   <div className="text-center">
                     <div className="w-48 border-b-2 border-primary mb-2"></div>
-                    <p className="font-semibold">{certificateData.instructor}</p>
-                    <p className="text-sm text-muted-foreground">Course Instructor</p>
+                    <p className="font-semibold">{certificateData.instructor || "Authorized Instructor"}</p>
+                    <p className="text-sm text-muted-foreground">Instructor</p>
                   </div>
                   
                   <div className="text-center">
@@ -83,15 +83,15 @@ const Certificate = () => {
                   
                   <div className="text-center">
                     <div className="w-48 border-b-2 border-primary mb-2"></div>
-                    <p className="font-semibold">Dr. Michael Smith</p>
-                    <p className="text-sm text-muted-foreground">Academic Director</p>
+                    <p className="font-semibold">Authorized Signatory</p>
+                    <p className="text-sm text-muted-foreground">Academic Office</p>
                   </div>
                 </div>
 
                 {/* Certificate ID */}
                 <div className="text-center mt-8 relative z-10">
                   <p className="text-xs text-muted-foreground">
-                    Certificate ID: {certificateData.certificateId}
+                    Certificate ID: {certificateData.certificateId || "—"}
                   </p>
                 </div>
 
@@ -116,7 +116,7 @@ const Certificate = () => {
                   <Award className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-semibold text-lg">Certificate Earned!</h3>
-                <p className="text-sm text-muted-foreground">Completed on {certificateData.completionDate}</p>
+                <p className="text-sm text-muted-foreground">Completed on {certificateData.completionDate || "—"}</p>
               </div>
 
               <Button className="w-full bg-gradient-primary hover:bg-primary-hover text-white">
@@ -134,19 +134,19 @@ const Certificate = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Course:</span>
-                    <span className="font-medium">React Bootcamp</span>
+                    <span className="font-medium">{certificateData.courseName || "—"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Duration:</span>
-                    <span className="font-medium">{certificateData.duration}</span>
+                    <span className="font-medium">{certificateData.duration || "—"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Grade:</span>
-                    <span className="font-medium text-green-600">{certificateData.grade}</span>
+                    <span className="font-medium text-green-600">{certificateData.grade || "—"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Certificate ID:</span>
-                    <span className="font-medium text-xs">{certificateData.certificateId}</span>
+                    <span className="font-medium text-xs">{certificateData.certificateId || "—"}</span>
                   </div>
                 </div>
               </div>

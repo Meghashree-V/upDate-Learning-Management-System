@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, Mail, Lock, User, Phone, BookOpen, GraduationCap } from 'lucide-react';
+import api from '@/lib/api';
 
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -20,8 +21,7 @@ const Signup = () => {
     password: '',
     confirmPassword: '',
     qualification: '',
-    interests: '',
-    userType: 'student'
+    interests: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,17 +31,28 @@ const Signup = () => {
     });
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle signup logic here
-    console.log('Signup attempt:', formData);
+    if (formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    try {
+      const payload = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+      };
+      const { data } = await api.post('/auth/signup', payload);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.role);
+      navigate('/student');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Signup failed';
+      alert(msg);
+    }
   };
 
   return (
@@ -49,7 +60,17 @@ const Signup = () => {
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <BookOpen className="h-8 w-8 text-primary mr-2" />
+            <img
+              src="/logo.png"
+              alt="upDate logo"
+              className="h-8 w-8 object-contain mr-2"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (target.src !== window.location.origin + '/placeholder.svg') {
+                  target.src = '/placeholder.svg';
+                }
+              }}
+            />
             <span className="text-2xl font-bold text-foreground">upDate</span>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Join upDate</h1>
@@ -154,19 +175,6 @@ const Signup = () => {
                   onChange={handleInputChange}
                   required
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label>I want to join as</Label>
-                <Select value={formData.userType} onValueChange={(value) => handleSelectChange('userType', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select user type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">Student/Learner</SelectItem>
-                    <SelectItem value="educator">Educator/Instructor</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="space-y-2">
@@ -292,7 +300,7 @@ const Signup = () => {
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Already have an account?{' '}
-                <Link to="/login" className="text-primary hover:underline font-medium">
+                <Link to="/Signin" className="text-primary hover:underline font-medium">
                   Sign in
                 </Link>
               </p>

@@ -35,85 +35,133 @@ import {
   Download,
   Calendar,
 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  fetchEnrollmentData,
+  fetchCoursePerformanceData,
+  fetchCategoryDistributionData,
+  fetchUserActivityData,
+  fetchRevenueData,
+  fetchKpiCardsData,
+  fetchStudentAnalyticsData,
+} from "@/api/mockAnalyticsApi";
+
+interface KpiCard {
+  title: string;
+  value: string;
+  change: string;
+  trend: "up" | "down";
+  icon: string; // Changed to string to match mock data
+  color: string;
+}
+
+interface EnrollmentData {
+  month: string;
+  enrollments: number;
+  revenue: number;
+}
+
+interface CoursePerformanceData {
+  course: string;
+  enrollments: number;
+  completion: number;
+  rating: number;
+}
+
+interface CategoryData {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface UserActivityData {
+  time: string;
+  active: number;
+}
+
+interface RevenueData {
+  month: string;
+  revenue: number;
+  target: number;
+}
+
+interface StudentAnalyticsData {
+  newStudents: number;
+  activeStudents: number;
+  retentionRate: number;
+}
 
 const ReportsAnalytics = () => {
-  const enrollmentData = [
-    { month: "Jan", enrollments: 120, revenue: 8400 },
-    { month: "Feb", enrollments: 180, revenue: 12600 },
-    { month: "Mar", enrollments: 240, revenue: 16800 },
-    { month: "Apr", enrollments: 190, revenue: 13300 },
-    { month: "May", enrollments: 280, revenue: 19600 },
-    { month: "Jun", enrollments: 320, revenue: 22400 },
-  ];
+  const [enrollmentData, setEnrollmentData] = useState<EnrollmentData[]>([]);
+  const [coursePerformanceData, setCoursePerformanceData] = useState<CoursePerformanceData[]>([]);
+  const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
+  const [userActivityData, setUserActivityData] = useState<UserActivityData[]>([]);
+  const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
+  const [kpiCards, setKpiCards] = useState<KpiCard[]>([]);
+  const [studentAnalytics, setStudentAnalytics] = useState<StudentAnalyticsData | null>(null);
 
-  const coursePerformanceData = [
-    { course: "React Dev", enrollments: 342, completion: 85, rating: 4.8 },
-    { course: "Python DS", enrollments: 289, completion: 78, rating: 4.7 },
-    { course: "UI/UX Design", enrollments: 234, completion: 92, rating: 4.6 },
-    { course: "Marketing", enrollments: 156, completion: 67, rating: 4.5 },
-    { course: "Machine Learning", enrollments: 198, completion: 74, rating: 4.9 },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const categoryData = [
-    { name: "Web Development", value: 35, color: "#DC2626" },
-    { name: "Data Science", value: 25, color: "#EA580C" },
-    { name: "Design", value: 20, color: "#CA8A04" },
-    { name: "Marketing", value: 15, color: "#65A30D" },
-    { name: "Mobile Dev", value: 5, color: "#0D9488" },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [
+          enrollments,
+          coursePerformance,
+          categories,
+          userActivity,
+          revenue,
+          kpis,
+          students,
+        ] = await Promise.all([
+          fetchEnrollmentData(),
+          fetchCoursePerformanceData(),
+          fetchCategoryDistributionData(),
+          fetchUserActivityData(),
+          fetchRevenueData(),
+          fetchKpiCardsData(),
+          fetchStudentAnalyticsData(),
+        ]);
+        setEnrollmentData(enrollments);
+        setCoursePerformanceData(coursePerformance);
+        setCategoryData(categories);
+        setUserActivityData(userActivity);
+        setRevenueData(revenue);
+        setKpiCards(kpis.map(kpi => ({
+          ...kpi,
+          icon: kpi.icon, // Keep icon as string
+          // Dynamically map icon strings to actual LucideReact components
+          // This will be handled in the render section below
+        })));
+        setStudentAnalytics(students);
+      } catch (err) {
+        setError("Failed to fetch analytics data.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const userActivityData = [
-    { time: "00:00", active: 12 },
-    { time: "04:00", active: 8 },
-    { time: "08:00", active: 145 },
-    { time: "12:00", active: 280 },
-    { time: "16:00", active: 320 },
-    { time: "20:00", active: 180 },
-  ];
+    fetchData();
+  }, []);
 
-  const revenueData = [
-    { month: "Jan", revenue: 8400, target: 10000 },
-    { month: "Feb", revenue: 12600, target: 12000 },
-    { month: "Mar", revenue: 16800, target: 15000 },
-    { month: "Apr", revenue: 13300, target: 14000 },
-    { month: "May", revenue: 19600, target: 18000 },
-    { month: "Jun", revenue: 22400, target: 20000 },
-  ];
+  // Map icon strings to LucideReact components
+  const iconMap: { [key: string]: React.ElementType } = {
+    DollarSign,
+    Users,
+    BookOpen,
+    Clock,
+  };
 
-  const kpiCards = [
-    {
-      title: "Total Revenue",
-      value: "$142,800",
-      change: "+15.2%",
-      trend: "up",
-      icon: DollarSign,
-      color: "text-success",
-    },
-    {
-      title: "Active Students",
-      value: "2,847",
-      change: "+8.1%",
-      trend: "up",
-      icon: Users,
-      color: "text-primary",
-    },
-    {
-      title: "Course Completions",
-      value: "1,234",
-      change: "+12.5%",
-      trend: "up",
-      icon: BookOpen,
-      color: "text-warning",
-    },
-    {
-      title: "Avg. Session Time",
-      value: "24m 32s",
-      change: "-2.3%",
-      trend: "down",
-      icon: Clock,
-      color: "text-destructive",
-    },
-  ];
+  if (loading) {
+    return <div className="text-center py-10">Loading analytics data...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-destructive">Error: {error}</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -146,29 +194,32 @@ const ReportsAnalytics = () => {
 
       {/* KPI Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {kpiCards.map((kpi, index) => (
-          <Card key={index} className="shadow-sm">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
-                  <p className="text-2xl font-bold">{kpi.value}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    {kpi.trend === "up" ? (
-                      <TrendingUp className="h-4 w-4 text-success" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-destructive" />
-                    )}
-                    <span className={`text-sm ${kpi.trend === "up" ? "text-success" : "text-destructive"}`}>
-                      {kpi.change}
-                    </span>
+        {kpiCards.map((kpi, index) => {
+          const IconComponent = iconMap[kpi.icon];
+          return (
+            <Card key={index} className="shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
+                    <p className="text-2xl font-bold">{kpi.value}</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      {kpi.trend === "up" ? (
+                        <TrendingUp className="h-4 w-4 text-success" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 text-destructive" />
+                      )}
+                      <span className={`text-sm ${kpi.trend === "up" ? "text-success" : "text-destructive"}`}>
+                        {kpi.change}
+                      </span>
+                    </div>
                   </div>
+                  {IconComponent && <IconComponent className={`h-8 w-8 ${kpi.color}`} />}
                 </div>
-                <kpi.icon className={`h-8 w-8 ${kpi.color}`} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
@@ -305,7 +356,7 @@ const ReportsAnalytics = () => {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm font-medium text-muted-foreground">New Students</p>
-                  <p className="text-3xl font-bold">1,847</p>
+                  <p className="text-3xl font-bold">{studentAnalytics?.newStudents.toLocaleString()}</p>
                   <Badge variant="outline" className="mt-2">+12% this month</Badge>
                 </div>
               </CardContent>
@@ -314,7 +365,7 @@ const ReportsAnalytics = () => {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm font-medium text-muted-foreground">Active Students</p>
-                  <p className="text-3xl font-bold">2,234</p>
+                  <p className="text-3xl font-bold">{studentAnalytics?.activeStudents.toLocaleString()}</p>
                   <Badge variant="outline" className="mt-2">+8% this month</Badge>
                 </div>
               </CardContent>
@@ -323,7 +374,7 @@ const ReportsAnalytics = () => {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm font-medium text-muted-foreground">Retention Rate</p>
-                  <p className="text-3xl font-bold">87%</p>
+                  <p className="text-3xl font-bold">{studentAnalytics?.retentionRate}%</p>
                   <Badge variant="outline" className="mt-2">+3% this month</Badge>
                 </div>
               </CardContent>
