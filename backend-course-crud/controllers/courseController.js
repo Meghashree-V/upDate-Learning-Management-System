@@ -78,3 +78,25 @@ export const deleteCourse = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+export const getCourseById = async (req, res) => {
+  const course = await Course.findById(req.params.id);
+  if (!course) return res.status(404).json({ message: "Course not found" });
+
+  res.json({
+    id: course._id,
+    title: course.title,
+    description: course.description,
+    category: course.categories?.[0] || "General",
+    price: course.price,
+    rating: course.rating || 4.5,
+    students: course.students || 0,
+    duration: course.duration,
+    level: course.level,
+    instructor: course.instructor,
+    objectives: course.objectives || [],
+    curriculum: course.curriculum || course.lessons.map(l => l.title),
+    image: `http://localhost:5000${course.thumbnail}`,
+  });
+};
