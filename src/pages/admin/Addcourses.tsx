@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import axios from "axios";
+import api from "@/lib/api";
 import {
   Select,
   SelectContent,
@@ -95,24 +95,29 @@ const Addcourses = () => {
     // formData.append("duration", duration);
     const formattedDuration = `${durationHours}h ${durationMinutes}m`;
     formData.append("duration", formattedDuration);
-    formData.append("price", price);
+    // Price: if free, force 0
+    const coercedPrice = isFree ? "0" : (price ?? "");
+    formData.append("price", coercedPrice);
     formData.append("instructor", instructor);
     formData.append("level", level);
     formData.append("enrollmentType", enrollmentType);
-    formData.append("capacity", capacity);
+    // Coerce capacity to string number (empty if not set)
+    formData.append("capacity", capacity ?? "");
     formData.append("startDate", startDate);
     formData.append("endDate", endDate);
     formData.append("isFree", isFree ? "true" : "false"); // ✅ Free/Paid
 
     formData.append("categories", JSON.stringify(selectedCategories));
-    formData.append("lessons", JSON.stringify(lessons));
+    // Filter out empty lessons to avoid backend validation errors
+    const validLessons = lessons.filter(l => l.title.trim() && l.duration.trim());
+    formData.append("lessons", JSON.stringify(validLessons));
 
     if (thumbnail) {
       formData.append("thumbnail", thumbnail);
     }
 
     try {
-      await axios.post("http://localhost:5000/api/courses", formData, {
+      await api.post("/courses", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       toast({ title: "Success", description: "Course created successfully!" });

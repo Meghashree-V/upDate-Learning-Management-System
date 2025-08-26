@@ -20,6 +20,8 @@ import Certificate from "./Home/pages/Certificate";
 import Profile from "./Home/pages/Profile";
 import StudentSettings from "./Home/pages/Settings";
 import Notifications from "./Home/pages/Notifications";
+import StudentAssignments from "./Home/pages/Assignments";
+import StudentResults from "./Home/pages/Results";
 
 // 
 
@@ -33,11 +35,14 @@ import AddUser from "./pages/admin/AddUser";
 import EditUser from "./pages/admin/EditUser";
 
 //=======
+
 import Addcourses from "./pages/admin/Addcourses";
 import Educator from "./pages/admin/Educator";
 import Mycourses from "./pages/admin/Mycourses";
 import StudentsEnrolled from "./pages/admin/StudentsEnrolled";
 import ReportsAnalytics from "./pages/admin/ReportsAnalytics";
+import AdminAssignmentsPage from "./pages/admin/Assignments";
+import AdminNotifications from "./pages/admin/Notifications";
 import Settings from "./pages/admin/Settings";
 import HelpSupport from "./pages/admin/HelpSupport";
 //>>>>>>> main
@@ -49,7 +54,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/courses" element={<Courses />} />
@@ -64,6 +69,8 @@ const App = () => (
           <Route path="/student/player/:id" element={<Player />} />
           <Route path="/student/certificate" element={<Certificate />} />
           <Route path="/student/certificate/:id" element={<Certificate />} />
+          <Route path="/student/assignments" element={<StudentAssignments />} />
+          <Route path="/student/results" element={<StudentResults />} />
           <Route path="/student/profile" element={<Profile />} />
           <Route path="/student/settings" element={<StudentSettings />} />
           <Route path="/student/notifications" element={<Notifications />} />
@@ -76,6 +83,8 @@ const App = () => (
           <Route path="/admin/mycourses" element={<AdminLayout><Mycourses /></AdminLayout>} />
           <Route path="/admin/studentsenrolled" element={<AdminLayout><StudentsEnrolled /></AdminLayout>} />
           <Route path="/admin/reportsanalytics" element={<AdminLayout><ReportsAnalytics /></AdminLayout>} />
+          <Route path="/admin/assignments" element={<AdminLayout><AdminAssignmentsPage /></AdminLayout>} />
+          <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><Settings /></AdminLayout>} />
           <Route path="/admin/helpsupport" element={<AdminLayout><HelpSupport /></AdminLayout>} />
 

@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { fetchMe } from "@/api/users";
 
 const Profile = () => {
-  // No user data wired yet; render safe empty state
+  const { data: me, isLoading } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -19,19 +21,19 @@ const Profile = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">—</p>
+                <p className="font-medium">{isLoading ? "…" : `${me?.firstName ?? "-"} ${me?.lastName ?? ""}`}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">—</p>
+                <p className="font-medium">{isLoading ? "…" : me?.email ?? "-"}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Role</p>
-                <p className="font-medium">Student</p>
+                <p className="font-medium">{isLoading ? "…" : me?.role ?? "-"}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Joined</p>
-                <p className="font-medium">—</p>
+                <p className="font-medium">{isLoading || !me?.createdAt ? "…" : new Date(me.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
             <div className="pt-2">

@@ -30,11 +30,15 @@ This project aims to provide an intuitive platform for managing courses, instruc
 
 ```bash
 upDate-Learning-Management-System/
-│── src/               # Components, pages, hooks
-│── public/            # Static assets
-│── package.json       # Dependencies & scripts
-│── tsconfig.json      # TypeScript config
-│── vite.config.ts     # Vite config
+│── src/               # Frontend components, pages, hooks (Vite + React + TS)
+│── public/            # Frontend static assets
+│── server/            # Backend (Express + TypeScript)
+│   ├── src/           # API source (e.g., auth, health)
+│   ├── package.json   # Backend scripts (dev/build/start)
+│   └── tsconfig.json  # Backend TS config
+│── package.json       # Root scripts to run web/api
+│── tsconfig.json      # Frontend TS config
+│── vite.config.ts     # Vite config (proxy /api -> :5000)
 └── README.md          # Documentation
 
 ⚡ Getting Started
@@ -47,8 +51,13 @@ cd upDate-Learning-Management-System
 2️⃣ Install dependencies
 npm install
 
-3️⃣ Start development server
-npm run dev
+3️⃣ Start development servers
+
+# Terminal 1 (Frontend)
+npm run dev:web
+
+# Terminal 2 (Backend)
+npm run dev:api
 ```
 
 

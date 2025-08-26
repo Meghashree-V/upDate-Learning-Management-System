@@ -1,5 +1,15 @@
 import type { Config } from "tailwindcss";
 
+// Make tailwindcss-animate optional to avoid dev crashes when it's not installed
+const animatePlugin = (() => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return require("tailwindcss-animate");
+  } catch {
+    return null;
+  }
+})();
+
 export default {
 	darkMode: ["class"],
 	content: [
@@ -93,5 +103,5 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: animatePlugin ? [animatePlugin] : [],
 } satisfies Config;
