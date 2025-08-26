@@ -27,22 +27,29 @@ import { useToast } from "@/hooks/use-toast";
 
 const Addcourses = () => {
   const { toast } = useToast();
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [lessons, setLessons] = useState([
-    { id: 1, title: "", duration: "", type: "video" }
-  ]);
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+  // Basic course info
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [duration, setDuration] = useState("");
+  // const [duration, setDuration] = useState("");
+  const [durationHours, setDurationHours] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("");
   const [price, setPrice] = useState("");
   const [instructor, setInstructor] = useState("");
   const [level, setLevel] = useState("");
-  const [capacity, setCapacity] = useState("");
   const [enrollmentType, setEnrollmentType] = useState("");
+  const [capacity, setCapacity] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isFree, setIsFree] = useState(false); // NEW: Free or Paid
+
+  // Categories and lessons
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [lessons, setLessons] = useState([{ id: 1, title: "", duration: "", type: "video" }]);
+
+  // Thumbnail
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
   const categories = [
     "Programming", "Design", "Marketing", "Business", "Data Science", 
@@ -59,10 +66,7 @@ const Addcourses = () => {
   };
 
   const addLesson = () => {
-    setLessons([
-      ...lessons,
-      { id: lessons.length + 1, title: "", duration: "", type: "video" }
-    ]);
+    setLessons([...lessons, { id: lessons.length + 1, title: "", duration: "", type: "video" }]);
   };
 
   const removeLesson = (id: number) => {
@@ -82,43 +86,58 @@ const Addcourses = () => {
       setThumbnailPreview(URL.createObjectURL(file));
     }
   };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    // formData.append("duration", duration);
+    const formattedDuration = `${durationHours}h ${durationMinutes}m`;
+    formData.append("duration", formattedDuration);
+    formData.append("price", price);
+    formData.append("instructor", instructor);
+    formData.append("level", level);
+    formData.append("enrollmentType", enrollmentType);
+    formData.append("capacity", capacity);
+    formData.append("startDate", startDate);
+    formData.append("endDate", endDate);
+    formData.append("isFree", isFree ? "true" : "false"); // ✅ Free/Paid
 
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("duration", duration);
-  formData.append("price", price);
-  formData.append("instructor", instructor);
-  formData.append("level", level);
-  formData.append("enrollmentType", enrollmentType);
-  formData.append("capacity", capacity);
-  formData.append("startDate", startDate);
-  formData.append("endDate", endDate);
+    formData.append("categories", JSON.stringify(selectedCategories));
+    formData.append("lessons", JSON.stringify(lessons));
 
-  // arrays/objects must be stringified
-  formData.append("categories", JSON.stringify(selectedCategories));
-  formData.append("lessons", JSON.stringify(lessons));
+    if (thumbnail) {
+      formData.append("thumbnail", thumbnail);
+    }
 
-  if (thumbnail) {
-    formData.append("thumbnail", thumbnail); // 👈 must match upload.single("thumbnail")
-  }
-
-  try {
-    await axios.post("http://localhost:5000/api/courses", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    toast({ title: "Success", description: "Course created successfully!" });
-  } catch (err: any) {
-    console.error("Error creating course:", err);
-    toast({ title: "Error", description: err.response?.data?.error || "Failed to create course" });
-  }
-};
-
+    try {
+      await axios.post("http://localhost:5000/api/courses", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast({ title: "Success", description: "Course created successfully!" });
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setDurationHours("");
+      setDurationMinutes("");
+      setPrice("");
+      setInstructor("");
+      setLevel("");
+      setEnrollmentType("");
+      setCapacity("");
+      setStartDate("");
+      setEndDate("");
+      setIsFree(false);
+      setSelectedCategories([]);
+      setLessons([{ id: 1, title: "", duration: "", type: "video" }]);
+      setThumbnail(null);
+      setThumbnailPreview(null);
+    } catch (err: any) {
+      console.error("Error creating course:", err);
+      toast({ title: "Error", description: err.response?.data?.error || "Failed to create course" });
+    }
+  };
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -132,7 +151,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       <form onSubmit={handleSubmit}>
         <Tabs defaultValue="basic" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="basic">Basic Info</TabsTrigger>
             <TabsTrigger value="content">Course Content</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -167,11 +186,15 @@ const handleSubmit = async (e: React.FormEvent) => {
                         <SelectValue placeholder="Select instructor" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none" disabled>No instructors available</SelectItem>
+                        {/* <SelectItem value="none" disabled>No instructors available</SelectItem> */}
+                        <SelectItem value="John Doe">John Doe</SelectItem>
+                        <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                        <SelectItem value="Alice Johnson">Alice Johnson</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="description">Course Description *</Label>
                   <Textarea
@@ -186,17 +209,28 @@ const handleSubmit = async (e: React.FormEvent) => {
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="duration">Duration (hours) *</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      placeholder="e.g., 40"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      required
-                    />
+                    <Label>Duration *</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="Hours"
+                        value={durationHours}
+                        onChange={(e) => setDurationHours(e.target.value)}
+                        required
+                      />
+                      <Input
+                        type="number"
+                        min={0}
+                        max={59}
+                        placeholder="Minutes"
+                        value={durationMinutes}
+                        onChange={(e) => setDurationMinutes(e.target.value)}
+                        required
+                      />
+                    </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="price">Price (₹) *</Label>
                     <Input
@@ -205,12 +239,26 @@ const handleSubmit = async (e: React.FormEvent) => {
                       placeholder="e.g., 99.99"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
-                      required
+                      required={!isFree} // Disable required if free
+                      disabled={isFree} // disable editing if free
                     />
                   </div>
-                </div>
 
-                 <div className="space-y-2">
+                  <div className="space-y-2">
+                    <Label>Course Type</Label>
+                    <Select onValueChange={(value) => setIsFree(value === "free")}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isFree ? "Free" : "Paid"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {/* Categories */}
+                <div className="space-y-2">
                   <Label>Categories</Label>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {selectedCategories.map((category) => (
@@ -241,6 +289,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </Select>
                 </div>
 
+                {/* Thumbnail */}
                 <div className="space-y-2">
                   <Label>Course Thumbnail</Label>
                   <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
@@ -266,6 +315,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               </CardContent>
             </Card>
           </TabsContent>
+
           {/* Course Content */}
           <TabsContent value="content" className="space-y-6">
             <Card>
@@ -276,7 +326,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {lessons.map((lesson, index) => (
+                {lessons.map((lesson) => (
                   <div
                     key={lesson.id}
                     className="flex flex-col md:flex-row gap-4 items-center border p-4 rounded-lg"
@@ -328,6 +378,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               </CardContent>
             </Card>
           </TabsContent>
+
           {/* Settings */}
           <TabsContent value="settings" className="space-y-6">
             <Card>
@@ -346,10 +397,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                         <SelectValue placeholder="Select level" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                        <SelectItem value="assignment">Assignment</SelectItem>
+                        <SelectItem value="Beginner">Beginner</SelectItem>
+                        <SelectItem value="Intermediate">Intermediate</SelectItem>
+                        <SelectItem value="Advanced">Advanced</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -369,7 +419,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
                     <Label>Capacity *</Label>
                     <Input
@@ -402,6 +452,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               </CardContent>
             </Card>
           </TabsContent>
+
           {/* Preview */}
           <TabsContent value="preview" className="space-y-6">
             <Card>
@@ -415,8 +466,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                 <h2 className="text-xl font-bold">{title || "Course Title"}</h2>
                 <p className="text-muted-foreground">{description || "Course description will appear here."}</p>
                 <p><strong>Instructor:</strong> {instructor || "N/A"}</p>
-                <p><strong>Duration:</strong> {duration || "N/A"} hours</p>
-                <p><strong>Price:</strong> ${price || "0.00"}</p>
+                {/* <p><strong>Duration:</strong> {duration || "N/A"} hours</p> */}
+               <p><strong>Duration:</strong> {durationHours || "0"}h {durationMinutes || "0"}m</p>
+                <p><strong>Price:</strong> {isFree ? "Free" : `₹${price || "0.00"}`}</p>
                 <p><strong>Level:</strong> {level || "N/A"}</p>
                 <p><strong>Enrollment Type:</strong> {enrollmentType || "N/A"}</p>
                 <p><strong>Capacity:</strong> {capacity || "N/A"}</p>
@@ -453,6 +505,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           </TabsContent>
         </Tabs>
 
+        {/* Submit Button */}
         <div className="flex justify-end mt-6">
           <Button type="submit" className="px-6">Create Course</Button>
         </div>

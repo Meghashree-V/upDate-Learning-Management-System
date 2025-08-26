@@ -5,20 +5,58 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Link, useSearchParams } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { courses as courseData, Course } from "@/data/courses";
 
-// Use centralized courses data
-const courses: Course[] = courseData;
+interface Course {
+  _id: any;
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  category: string;
+  level: string;
+  price: number;
+  originalPrice?: number;
+  rating: number;
+  students: number;
+  duration: string;
+  thumbnail?: string;
+  image?: string
+}
 
 const CourseList = () => {
   const [searchParams] = useSearchParams();
-  const [filteredCourses, setFilteredCourses] = useState(courses);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [sortBy, setSortBy] = useState("title");
 
   useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/courses");
+        const data = await res.json();
+
+        // Ensure proper image URL
+        const updated = data.map((course: any) => {
+          let imageUrl = course.thumbnail || course.image || "";
+          if (imageUrl && !imageUrl.startsWith("http")) {
+            imageUrl = `http://localhost:5000${imageUrl.startsWith("/uploads") ? imageUrl : `/uploads/${imageUrl}`}`;
+          }
+          return { ...course, image: imageUrl };
+        });
+
+        setCourses(updated);
+        setFilteredCourses(updated);
+      } catch (error) {
+        console.error("Failed to fetch courses", error);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  useEffect(() => {
     let filtered = [...courses];
-    
-    // Filter by search query
+
     const searchQuery = searchParams.get("search");
     if (searchQuery) {
       filtered = filtered.filter(course =>
@@ -28,7 +66,6 @@ const CourseList = () => {
       );
     }
 
-    // Filter by category
     const category = searchParams.get("category");
     if (category) {
       filtered = filtered.filter(course =>
@@ -36,37 +73,35 @@ const CourseList = () => {
       );
     }
 
-    // Sort courses
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case "rating":
-          return b.rating - a.rating;
-        case "students":
-          return b.students - a.students;
-        case "price":
-          return (a.price ?? 0) - (b.price ?? 0);
-        default:
-          return a.title.localeCompare(b.title);
+        case "rating": return b.rating - a.rating;
+        case "students": return b.students - a.students;
+        case "price": return (a.price ?? 0) - (b.price ?? 0);
+        default: return a.title.localeCompare(b.title);
       }
     });
 
     setFilteredCourses(filtered);
-  }, [searchParams, sortBy]);
+  }, [searchParams, sortBy, courses]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Title & Count */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">
-          {searchParams.get("search") ? `Search Results for "${searchParams.get("search")}"` :
-           searchParams.get("category") ? `${searchParams.get("category")} Courses` :
-           "All Courses"}
+        <h1 className="text-3xl font-bold mb-2">
+          {searchParams.get("search")
+            ? `Search Results for "${searchParams.get("search")}"`
+            : searchParams.get("category")
+            ? `${searchParams.get("category")} Courses`
+            : "All Courses"}
         </h1>
         <p className="text-muted-foreground">
-          {filteredCourses.length} course{filteredCourses.length !== 1 ? 's' : ''} found
+          {filteredCourses.length} course{filteredCourses.length !== 1 ? "s" : ""} found
         </p>
       </div>
 
-      {/* Filters */}
+      {/* Sort */}
       <div className="mb-6 flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-muted-foreground" />
@@ -85,6 +120,7 @@ const CourseList = () => {
         </Select>
       </div>
 
+      {/* Course Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.length === 0 ? (
           <div className="col-span-full text-center py-12">
@@ -95,75 +131,58 @@ const CourseList = () => {
           </div>
         ) : (
           filteredCourses.map((course) => (
-          <Card key={course.id} className="group hover:shadow-medium transition-all duration-300 border-border">
-            <CardHeader className="p-0">
-              <div className="relative overflow-hidden rounded-t-lg">
-                <img
-                  src={course.image}
-                  alt={course.title}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute top-3 left-3">
-                  <Badge variant="secondary" className="bg-background/90 text-foreground">
-                    {course.category}
-                  </Badge>
+            <Card key={course.id} className="group hover:shadow-medium transition-all duration-300">
+              <CardHeader className="p-0">
+                <div className="relative overflow-hidden rounded-t-lg">
+                  <img
+                    src={course.image}
+                    alt={course.title}
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="secondary">{course.category}</Badge>
+                  </div>
+                  <div className="absolute top-3 right-3">
+                    <Badge variant={course.level === "Beginner" ? "default" : course.level === "Intermediate" ? "secondary" : "destructive"}>
+                      {course.level}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="absolute top-3 right-3">
-                  <Badge 
-                    variant={course.level === 'Beginner' ? 'default' : course.level === 'Intermediate' ? 'secondary' : 'destructive'}
-                    className={course.level === 'Beginner' ? 'bg-green-500 hover:bg-green-600' : ''}
-                  >
-                    {course.level}
-                  </Badge>
+              </CardHeader>
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                  {course.title}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{course.description}</p>
+                <p className="text-sm font-medium text-foreground mb-3">by {course.instructor}</p>
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+                  <div className="flex items-center space-x-1">
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <span>{course.rating}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-4 h-4" />
+                    <span>{course.students}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{course.duration}</span>
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                {course.title}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                {course.description}
-              </p>
-              <p className="text-sm font-medium text-foreground mb-3">
-                by {course.instructor || "Instructor"}
-              </p>
-
-              <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                <div className="flex items-center space-x-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{course.rating}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Users className="w-4 h-4" />
-                  <span>{course.students.toLocaleString()}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{course.duration}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-xl font-bold text-primary">₹{course.price}</span>
-                  {course.originalPrice !== undefined && (
-                    <span className="text-sm text-muted-foreground line-through">₹{course.originalPrice}</span>
-                  )}
+                  {course.originalPrice && <span className="text-sm line-through">₹{course.originalPrice}</span>}
                 </div>
-              </div>
-            </CardContent>
-
-            <CardFooter className="p-4 pt-0">
-              <Link to={`/student/courses/${course.id}`} className="w-full">
-                <Button className="w-full bg-gradient-primary:bg-primary-hover text-white">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  View Course
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
+              </CardContent>
+              <CardFooter className="p-4 pt-0">
+                <Link to={`/student/courses/${course._id}`} className="w-full">
+                  <Button className="w-full bg-gradient-primary:bg-primary-hover text-white">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    View Course
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
           ))
         )}
       </div>

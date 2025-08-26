@@ -22,7 +22,7 @@ This project aims to provide an intuitive platform for managing courses, instruc
 - **Frontend:** React, TypeScript, Vite  
 - **UI Framework:** Tailwind CSS, shadcn-ui  
 - **State Management:** React Hooks / Context API  
-- **Deployment:** Lovable.dev (supports custom domain)  
+- **Deployment:** vercel  (supports custom domain)  
 
 ---
 

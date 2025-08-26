@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { CourseCard } from '@/components/CourseCard';
@@ -6,17 +7,48 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, TrendingUp, Award, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getFeaturedCourses, courses } from '@/data/courses';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const Index = () => {
-  const featuredCourses = getFeaturedCourses();
-  const freeCourses = courses.filter(course => course.isFree);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const res = await fetch(`${API_BASE_URL}/api/courses`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch courses: ${res.status} ${res.statusText}`);
+        }
+        const data = await res.json();
+        setCourses(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || 'Something went wrong while fetching courses.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Ensure consistent ordering even if backend changes sorting
+  const featuredCourses = [...courses]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3);
+
+  const freeCourses = courses.filter((course) => Number(course.price) === 0);
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <Hero />
-      
+
       {/* Featured Courses Section */}
       <section className="py-20 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,13 +60,21 @@ const Index = () => {
               Hand-picked courses from our expert instructors to accelerate your learning journey
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {featuredCourses.map((course) => (
-              <CourseCard key={course.id} {...course} />
-            ))}
-          </div>
-          
+
+          {loading ? (
+            <p className="text-center text-muted-foreground">Loading courses...</p>
+          ) : error ? (
+            <p className="text-center text-red-600">{error}</p>
+          ) : featuredCourses.length === 0 ? (
+            <p className="text-center text-muted-foreground">No courses available yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {featuredCourses.map((course) => (
+                <CourseCard key={course._id || course.id} {...course} />
+              ))}
+            </div>
+          )}
+
           <div className="text-center">
             <Link to="/courses">
               <Button variant="outline" size="lg">
@@ -56,7 +96,7 @@ const Index = () => {
               <div className="text-3xl font-bold text-foreground">50K+</div>
               <div className="text-muted-foreground">Active Students</div>
             </div>
-            
+
             <div className="text-center space-y-2">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
                 <TrendingUp className="h-8 w-8 text-primary" />
@@ -64,7 +104,7 @@ const Index = () => {
               <div className="text-3xl font-bold text-foreground">1000+</div>
               <div className="text-muted-foreground">Courses Available</div>
             </div>
-            
+
             <div className="text-center space-y-2">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
                 <Star className="h-8 w-8 text-primary" />
@@ -72,7 +112,7 @@ const Index = () => {
               <div className="text-3xl font-bold text-foreground">4.8</div>
               <div className="text-muted-foreground">Average Rating</div>
             </div>
-            
+
             <div className="text-center space-y-2">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
                 <Award className="h-8 w-8 text-primary" />
@@ -98,12 +138,20 @@ const Index = () => {
               Get started with our completely free courses and discover the quality of our content
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {freeCourses.map((course) => (
-              <CourseCard key={course.id} {...course} />
-            ))}
-          </div>
+
+          {loading ? (
+            <p className="text-center text-muted-foreground">Loading free courses...</p>
+          ) : error ? (
+            <p className="text-center text-red-600">{error}</p>
+          ) : freeCourses.length === 0 ? (
+            <p className="text-center text-muted-foreground">No free courses available right now.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {freeCourses.map((course) => (
+                <CourseCard key={course._id || course.id} {...course} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -118,33 +166,43 @@ const Index = () => {
               Find courses that match your interests and career goals
             </p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               'Web Development',
-              'Data Science', 
+              'Data Science',
               'Digital Marketing',
               'UI/UX Design',
               'Mobile Development',
               'Business Analytics',
               'Artificial Intelligence',
-              'Cybersecurity'
+              'Cybersecurity',
             ].map((category, index) => (
               <Link key={category} to={`/courses?category=${encodeURIComponent(category)}`}>
                 <Card className="group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
                   <CardContent className="p-6 text-center">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                      index % 4 === 0 ? 'bg-primary/10' :
-                      index % 4 === 1 ? 'bg-green-100' :
-                      index % 4 === 2 ? 'bg-blue-100' :
-                      'bg-purple-100'
-                    }`}>
-                      <TrendingUp className={`h-6 w-6 ${
-                        index % 4 === 0 ? 'text-primary' :
-                        index % 4 === 1 ? 'text-green-600' :
-                        index % 4 === 2 ? 'text-blue-600' :
-                        'text-purple-600'
-                      }`} />
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                        index % 4 === 0
+                          ? 'bg-primary/10'
+                          : index % 4 === 1
+                          ? 'bg-green-100'
+                          : index % 4 === 2
+                          ? 'bg-blue-100'
+                          : 'bg-purple-100'
+                      }`}
+                    >
+                      <TrendingUp
+                        className={`h-6 w-6 ${
+                          index % 4 === 0
+                            ? 'text-primary'
+                            : index % 4 === 1
+                            ? 'text-green-600'
+                            : index % 4 === 2
+                            ? 'text-blue-600'
+                            : 'text-purple-600'
+                        }`}
+                      />
                     </div>
                     <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                       {category}
@@ -164,16 +222,24 @@ const Index = () => {
             Ready to Transform Your Career?
           </h2>
           <p className="text-xl text-primary-foreground/90 max-w-2xl mx-auto">
-            Join thousands of professionals who have already upgraded their skills with upDate. 
+            Join thousands of professionals who have already upgraded their skills with upDate.
             Start your learning journey today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="secondary" size="lg" className="text-lg px-8 py-3">
-              Browse Free Courses
-            </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-3 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-              View All Courses
-            </Button>
+            <Link to="/courses?filter=free">
+              <Button variant="secondary" size="lg" className="text-lg px-8 py-3">
+                Browse Free Courses
+              </Button>
+            </Link>
+            <Link to="/courses">
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-lg px-8 py-3 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+              >
+                View All Courses
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
