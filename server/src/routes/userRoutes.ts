@@ -6,10 +6,19 @@ const router = Router();
 // 👉 Create User
 router.post("/", async (req, res) => {
   try {
-    const user = await User.create(req.body);
+    const { firstName, lastName, email, phone, password, role } = req.body;
+
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const user = await User.create({ firstName, lastName, email, phone, password, role });
     res.status(201).json(user);
-  } catch (err) {
-    res.status(400).json({ error: "Error creating user", details: err });
+  } catch (err: any) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+    res.status(400).json({ error: "Error creating user", details: err.message });
   }
 });
 
@@ -57,4 +66,3 @@ router.delete("/:id", async (req, res) => {
 });
 
 export default router;
-

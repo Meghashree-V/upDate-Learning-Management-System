@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import path from 'path';
 import authRouter from './routes/auth';
 import coursesRouter from './routes/courses';
-import usersRouter from './routes/users';
+import usersRouter from './routes/userRoutes';
 import assignmentsRouter from './routes/assignments';
 import notificationsRouter from './routes/notifications';
 

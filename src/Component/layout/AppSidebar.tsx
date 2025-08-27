@@ -57,7 +57,15 @@ const managementItems = [
       { title: "Students Enrolled", url: "/admin/studentsenrolled", icon: Users },
     ],
   },
+   {
+    title: "User Management",   // user crud
+    icon: Users,
+    subItems: [
+      { title: "Users", url: "/admin/users", icon: Users }, // users.tsx path
+    ],
+  },
 ];
+
 
 const analyticsItems = [
   {
