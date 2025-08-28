@@ -8,6 +8,14 @@ import coursesRouter from './routes/courses';
 import usersRouter from './routes/userRoutes';
 import assignmentsRouter from './routes/assignments';
 import notificationsRouter from './routes/notifications';
+import enrollmentRoutes from "./routes/enrollmentRoutes.js";
+import courseRoutes from "./routes/courseRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
+import userActivityRoutes from "./routes/userActivityRoutes.js";
+import revenueRoutes from "./routes/revenueRoutes.js";
+import kpiRoutes from "./routes/kpiRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
+
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5000;
 const MONGODB_URI = process.env.MONGODB_URI || '';
@@ -42,6 +50,14 @@ app.use('/api/courses', coursesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/assignments', assignmentsRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use("/api/enrollments", enrollmentRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/user-activity", userActivityRoutes);
+app.use("/api/revenue", revenueRoutes);
+app.use("/api/kpis", kpiRoutes);
+app.use("/api/reports", reportRoutes);
+app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
 // ✅ Start Server
 async function start() {

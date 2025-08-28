@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,133 +36,69 @@ import {
   Download,
   Calendar,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
-import {
-  fetchEnrollmentData,
-  fetchCoursePerformanceData,
-  fetchCategoryDistributionData,
-  fetchUserActivityData,
-  fetchRevenueData,
-  fetchKpiCardsData,
-  fetchStudentAnalyticsData,
-} from "@/api/mockAnalyticsApi";
+import { log } from "console";
 
-interface KpiCard {
-  title: string;
-  value: string;
-  change: string;
-  trend: "up" | "down";
-  icon: string; // Changed to string to match mock data
-  color: string;
-}
-
-interface EnrollmentData {
-  month: string;
-  enrollments: number;
-  revenue: number;
-}
-
-interface CoursePerformanceData {
-  course: string;
-  enrollments: number;
-  completion: number;
-  rating: number;
-}
-
-interface CategoryData {
-  name: string;
-  value: number;
-  color: string;
-}
-
-interface UserActivityData {
-  time: string;
-  active: number;
-}
-
-interface RevenueData {
-  month: string;
-  revenue: number;
-  target: number;
-}
-
-interface StudentAnalyticsData {
-  newStudents: number;
-  activeStudents: number;
-  retentionRate: number;
-}
+// 👇 Map backend string icon names to actual components
+const iconMap: Record<string, any> = {
+  DollarSign,
+  Users,
+  BookOpen,
+  Clock,
+};
 
 const ReportsAnalytics = () => {
-  const [enrollmentData, setEnrollmentData] = useState<EnrollmentData[]>([]);
-  const [coursePerformanceData, setCoursePerformanceData] = useState<CoursePerformanceData[]>([]);
-  const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
-  const [userActivityData, setUserActivityData] = useState<UserActivityData[]>([]);
-  const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
-  const [kpiCards, setKpiCards] = useState<KpiCard[]>([]);
-  const [studentAnalytics, setStudentAnalytics] = useState<StudentAnalyticsData | null>(null);
+  // ---- STATE ----
+  const [enrollmentData, setEnrollmentData] = useState<any[]>([]);
+  const [coursePerformanceData, setCoursePerformanceData] = useState<any[]>([]);
+  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [userActivityData, setUserActivityData] = useState<any[]>([]);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [kpiCards, setKpiCards] = useState<any[]>([]);
+  const [revenueBreakdown, setRevenueBreakdown] = useState<any>({});
+  const [topCourses, setTopCourses] = useState<any[]>([]);
+  const [days, setDays] = useState("30");
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  // ---- FETCH ANALYTICS ----
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAnalytics = async () => {
       try {
-        setLoading(true);
         const [
-          enrollments,
-          coursePerformance,
-          categories,
-          userActivity,
-          revenue,
-          kpis,
-          students,
+          enrollmentsRes,
+          coursesRes,
+          categoriesRes,
+          userActRes,
+          revenueRes,
+          kpiRes,
+          breakdownRes,
+          topCoursesRes,
         ] = await Promise.all([
-          fetchEnrollmentData(),
-          fetchCoursePerformanceData(),
-          fetchCategoryDistributionData(),
-          fetchUserActivityData(),
-          fetchRevenueData(),
-          fetchKpiCardsData(),
-          fetchStudentAnalyticsData(),
+          fetch(`http://localhost:5000/api/enrollments?days=${days}`).then((r) => r.json()),
+          fetch(`http://localhost:5000/api/courses?days=${days}`).then((r) => r.json()),
+          fetch(`http://localhost:5000/api/categories?days=${days}`).then((r) => r.json()),
+          fetch(`http://localhost:5000/api/user-activity?days=${days}`).then((r) => r.json()),
+          fetch(`http://localhost:5000/api/revenue?days=${days}`).then((r) => r.json()),
+          fetch(`http://localhost:5000/api/kpis?days=${days}`).then((r) => r.json()),
+          fetch(`http://localhost:5000/api/revenue/breakdown?days=${days}`).then((r) => r.json()),
+          fetch(`http://localhost:5000/api/revenue/top-courses?days=${days}&limit=3`).then((r) => r.json()),
         ]);
-        setEnrollmentData(enrollments);
-        setCoursePerformanceData(coursePerformance);
-        setCategoryData(categories);
-        setUserActivityData(userActivity);
-        setRevenueData(revenue);
-        setKpiCards(kpis.map(kpi => ({
-          ...kpi,
-          icon: kpi.icon, // Keep icon as string
-          // Dynamically map icon strings to actual LucideReact components
-          // This will be handled in the render section below
-        })));
-        setStudentAnalytics(students);
+
+        setEnrollmentData(enrollmentsRes);
+        setCoursePerformanceData(coursesRes);
+        setCategoryData(categoriesRes);
+        setUserActivityData(userActRes);
+        setRevenueData(revenueRes);
+        setKpiCards(kpiRes);
+        setRevenueBreakdown(breakdownRes);
+        setTopCourses(topCoursesRes);
+
+        console.log("✅ Analytics fetched");
       } catch (err) {
-        setError("Failed to fetch analytics data.");
-        console.error(err);
-      } finally {
-        setLoading(false);
+        console.error("❌ Error fetching analytics:", err);
       }
     };
 
-    fetchData();
-  }, []);
-
-  // Map icon strings to LucideReact components
-  const iconMap: { [key: string]: React.ElementType } = {
-    DollarSign,
-    Users,
-    BookOpen,
-    Clock,
-  };
-
-  if (loading) {
-    return <div className="text-center py-10">Loading analytics data...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-10 text-destructive">Error: {error}</div>;
-  }
+    fetchAnalytics();
+  }, [days]); // refetch whenever filter changes
 
   return (
     <div className="space-y-6">
@@ -173,7 +110,7 @@ const ReportsAnalytics = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Select defaultValue="30">
+          <Select value={days} onValueChange={(val) => setDays(val)}>
             <SelectTrigger className="w-[180px]">
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue />
@@ -185,17 +122,20 @@ const ReportsAnalytics = () => {
               <SelectItem value="365">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
+
+
+          <Button variant="outline" onClick={() => window.open(`http://localhost:5000/api/reports/export?days=${days}`)}>
             <Download className="h-4 w-4 mr-2" />
             Export Report
           </Button>
+
         </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((kpi, index) => {
-          const IconComponent = iconMap[kpi.icon];
+          const Icon = iconMap[kpi.icon] || DollarSign;
           return (
             <Card key={index} className="shadow-sm">
               <CardContent className="pt-6">
@@ -209,12 +149,15 @@ const ReportsAnalytics = () => {
                       ) : (
                         <TrendingDown className="h-4 w-4 text-destructive" />
                       )}
-                      <span className={`text-sm ${kpi.trend === "up" ? "text-success" : "text-destructive"}`}>
+                      <span
+                        className={`text-sm ${kpi.trend === "up" ? "text-success" : "text-destructive"
+                          }`}
+                      >
                         {kpi.change}
                       </span>
                     </div>
                   </div>
-                  {IconComponent && <IconComponent className={`h-8 w-8 ${kpi.color}`} />}
+                  <Icon className={`h-8 w-8 ${kpi.color}`} />
                 </div>
               </CardContent>
             </Card>
@@ -223,6 +166,7 @@ const ReportsAnalytics = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
+        {/* ---- Overview ---- */}
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="courses">Course Analytics</TabsTrigger>
@@ -243,10 +187,10 @@ const ReportsAnalytics = () => {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip />
-                    <Area 
-                      type="monotone" 
-                      dataKey="enrollments" 
-                      stroke="hsl(var(--primary))" 
+                    <Area
+                      type="monotone"
+                      dataKey="enrollments"
+                      stroke="hsl(var(--primary))"
                       fill="hsl(var(--primary))"
                       fillOpacity={0.3}
                     />
@@ -268,7 +212,9 @@ const ReportsAnalytics = () => {
                       cy="50%"
                       outerRadius={100}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) =>
+                        `${name} ${(percent * 100).toFixed(0)}%`
+                      }
                     >
                       {categoryData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -292,10 +238,10 @@ const ReportsAnalytics = () => {
                   <XAxis dataKey="time" />
                   <YAxis />
                   <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="active" 
-                    stroke="hsl(var(--primary))" 
+                  <Line
+                    type="monotone"
+                    dataKey="active"
+                    stroke="hsl(var(--primary))"
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -304,6 +250,7 @@ const ReportsAnalytics = () => {
           </Card>
         </TabsContent>
 
+        {/* ---- Courses ---- */}
         <TabsContent value="courses" className="space-y-6">
           <Card>
             <CardHeader>
@@ -350,14 +297,17 @@ const ReportsAnalytics = () => {
           </div>
         </TabsContent>
 
+        {/* ---- Students ---- */}
         <TabsContent value="students" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-3">
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm font-medium text-muted-foreground">New Students</p>
-                  <p className="text-3xl font-bold">{studentAnalytics?.newStudents.toLocaleString()}</p>
-                  <Badge variant="outline" className="mt-2">+12% this month</Badge>
+                  <p className="text-3xl font-bold">1,847</p>
+                  <Badge variant="outline" className="mt-2">
+                    +12% this month
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -365,8 +315,10 @@ const ReportsAnalytics = () => {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm font-medium text-muted-foreground">Active Students</p>
-                  <p className="text-3xl font-bold">{studentAnalytics?.activeStudents.toLocaleString()}</p>
-                  <Badge variant="outline" className="mt-2">+8% this month</Badge>
+                  <p className="text-3xl font-bold">2,234</p>
+                  <Badge variant="outline" className="mt-2">
+                    +8% this month
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -374,8 +326,10 @@ const ReportsAnalytics = () => {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-sm font-medium text-muted-foreground">Retention Rate</p>
-                  <p className="text-3xl font-bold">{studentAnalytics?.retentionRate}%</p>
-                  <Badge variant="outline" className="mt-2">+3% this month</Badge>
+                  <p className="text-3xl font-bold">87%</p>
+                  <Badge variant="outline" className="mt-2">
+                    +3% this month
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -392,10 +346,10 @@ const ReportsAnalytics = () => {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="enrollments" 
-                    stroke="hsl(var(--primary))" 
+                  <Area
+                    type="monotone"
+                    dataKey="enrollments"
+                    stroke="hsl(var(--primary))"
                     fill="hsl(var(--primary))"
                     fillOpacity={0.3}
                   />
@@ -405,6 +359,7 @@ const ReportsAnalytics = () => {
           </Card>
         </TabsContent>
 
+        {/* ---- Revenue ---- */}
         <TabsContent value="revenue" className="space-y-6">
           <Card>
             <CardHeader>
@@ -417,8 +372,16 @@ const ReportsAnalytics = () => {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="revenue" fill="hsl(var(--primary))" name="Actual Revenue" />
-                  <Bar dataKey="target" fill="hsl(var(--muted))" name="Target Revenue" />
+                  <Bar
+                    dataKey="revenue"
+                    fill="hsl(var(--primary))"
+                    name="Actual Revenue"
+                  />
+                  <Bar
+                    dataKey="target"
+                    fill="hsl(var(--muted))"
+                    name="Target Revenue"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -432,38 +395,48 @@ const ReportsAnalytics = () => {
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>Course Sales</span>
-                  <span className="font-bold">$128,400</span>
+                  <span className="font-bold">
+                    ${(revenueBreakdown.courseSales ?? 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Subscriptions</span>
-                  <span className="font-bold">$14,400</span>
+                  <span className="font-bold">
+                    ${(revenueBreakdown.subscriptions ?? 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Certifications</span>
-                  <span className="font-bold">$6,800</span>
+                  <span className="font-bold">
+                    ${(revenueBreakdown.certifications ?? 0).toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center border-t pt-2">
                   <span className="font-bold">Total</span>
-                  <span className="font-bold text-primary">$149,600</span>
+                  <span className="font-bold text-primary">
+                    ${(revenueBreakdown.total ?? 0).toLocaleString()}
+                  </span>
                 </div>
               </CardContent>
             </Card>
+
 
             <Card>
               <CardHeader>
                 <CardTitle>Top Revenue Courses</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {coursePerformanceData.slice(0, 3).map((course, index) => (
+                {topCourses.map((course, index) => (
                   <div key={index} className="flex justify-between items-center">
                     <span className="text-sm">{course.course}</span>
                     <Badge variant="outline">
-                      ${(course.enrollments * 89.99).toLocaleString()}
+                      ${course.revenue.toLocaleString()}
                     </Badge>
                   </div>
                 ))}
               </CardContent>
             </Card>
+
           </div>
         </TabsContent>
       </Tabs>
