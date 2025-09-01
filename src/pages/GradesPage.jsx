@@ -22,24 +22,37 @@ export default function GradesPage() {
       const enrichedGrades = await Promise.all(
         res.data.map(async (g) => {
           try {
-            const submissionInfo = await axios.get(
-              `http://localhost:5000/api/submissions/${g.submission_id}`
-            );
+            if (g.submission_id) {
+              // ✅ Normal case
+              const submissionInfo = await axios.get(
+                `http://localhost:5000/api/submissions/${g.submission_id}`
+              );
 
-            return {
-              ...g,
-              quizTitle: submissionInfo.data.quiz_id?.title,
-              assignmentTitle: submissionInfo.data.assignment_id?.title,
-              total:
-                submissionInfo.data.assignment_id?.points ||
-                submissionInfo.data.quiz_id?.points ||
-                null,
-            };
+              return {
+                ...g,
+                quizTitle: submissionInfo.data.quiz_id?.title,
+                assignmentTitle: submissionInfo.data.assignment_id?.title,
+                total:
+                  submissionInfo.data.assignment_id?.points ||
+                  submissionInfo.data.quiz_id?.points ||
+                  null,
+              };
+            } else {
+              // ⚠️ Agar submission_id nahi hai to direct quiz/assignment se title lo
+              return {
+                ...g,
+                quizTitle: g.quiz_id?.title || null,
+                assignmentTitle: g.assignment_id?.title || null,
+                total: g.quiz_id?.points || g.assignment_id?.points || null,
+              };
+            }
           } catch {
             return g;
           }
         })
       );
+
+
 
       setGrades(enrichedGrades);
       setError(null);
@@ -55,36 +68,36 @@ export default function GradesPage() {
   }, []);
 
   // Submit a grade
-// Submit a grade
-const handleGradeSubmit = async (e) => {
-  e.preventDefault();
-  if (!graderId) {
-    setError("Grader User ID is required");
-    return;
-  }
+  // Submit a grade
+  const handleGradeSubmit = async (e) => {
+    e.preventDefault();
+    if (!graderId) {
+      setError("Grader User ID is required");
+      return;
+    }
 
-  try {
-    await axios.post(
-      `http://localhost:5000/api/grades/${submissionId}/grade`,
-      {
-        score: Number(score),          
-        feedback: feedback || "",      
-        grader_user_id: graderId || "admin1"  
-      }
-    );
+    try {
+      await axios.post(
+        `http://localhost:5000/api/grades/${submissionId}/grade`,
+        {
+          score: Number(score),
+          feedback: feedback || "",
+          grader_user_id: graderId || "admin1"
+        }
+      );
 
-    await fetchGrades();
+      await fetchGrades();
 
-    // Reset form
-    setSubmissionId("");
-    setGraderId("");
-    setScore(0);
-    setFeedback("");
-  } catch (err) {
-    console.log(err)
-    setError(err.response?.data?.message || "Failed to submit grade");
-  }
-};
+      // Reset form
+      setSubmissionId("");
+      setGraderId("");
+      setScore(0);
+      setFeedback("");
+    } catch (err) {
+      console.log(err)
+      setError(err.response?.data?.message || "Failed to submit grade");
+    }
+  };
 
 
   if (loading) return <div>Loading grades…</div>;
@@ -150,8 +163,8 @@ const handleGradeSubmit = async (e) => {
                 {g.quizTitle
                   ? `Quiz: ${g.quizTitle}`
                   : g.assignmentTitle
-                  ? `Assignment: ${g.assignmentTitle}`
-                  : "—"}
+                    ? `Assignment: ${g.assignmentTitle}`
+                    : "—"}
               </p>
               {g.feedback && <p className="text-sm mt-1">💬 {g.feedback}</p>}
               <p className="text-xs text-gray-500 mt-1">

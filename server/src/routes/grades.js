@@ -45,15 +45,13 @@ router.post('/:submissionId/grade', async (req, res) => {
       }
     }
 
-    const grade = new Grade({
-      submission_id: submissionId,
-      grader_user_id,
-      score: finalScore,
-      feedback,
-      graded_at: new Date(),
+    const newGrade = new Grade({
+      submission_id: submission._id, // ✅ link karo
+      quiz_id: submission.quiz_id,
+      user_id: submission.user_id,
+      score: calculatedScore,
     });
-
-    await grade.save();
+    await newGrade.save();
 
     submission.status = 'graded';
     await submission.save();

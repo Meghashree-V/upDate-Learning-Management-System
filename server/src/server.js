@@ -20,6 +20,10 @@ app.use('/uploads', express.static(uploadDir)); // serve uploaded files
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json()); // parse JSON request bodies
 
+
+
+
+
 // ==================== DATABASE ====================
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
