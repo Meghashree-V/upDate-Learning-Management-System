@@ -9,26 +9,30 @@ export default function HomePage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [assignRes, quizRes, gradeRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/assignments"),
-          axios.get("http://localhost:5000/api/quizzes"),
-          axios.get("http://localhost:5000/api/grades"),
-        ]);
+  const fetchData = async () => {
+    try {
+      const [assignRes, quizRes, gradeRes] = await Promise.all([
+        axios.get("http://localhost:5000/api/assignments"),
+        axios.get("http://localhost:5000/api/quizzes"),
+        axios.get("http://localhost:5000/api/grades"),
+      ]);
 
-        setAssignments(assignRes.data || []);
-        setQuizzes(quizRes.data || []);
-        setGrades(gradeRes.data || []);
-      } catch (err) {
-        setError(err.message || "Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
+      setAssignments(assignRes.data || []);
+      setQuizzes(quizRes.data || []);
+      setGrades(gradeRes.data || []);
+    } catch (err) {
+      setError(err.message || "Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
-  }, []);
+  fetchData();
+}, []);
+
+
+
+  
 
   if (loading) return <p>Loading dashboard…</p>;
   if (error) return <p className="text-red-600">{error}</p>;

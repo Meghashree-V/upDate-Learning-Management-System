@@ -18,6 +18,17 @@ router.get('/', async (req, res) => {
   }
 });
 
+
+// GET all grades
+router.get('/', async (req, res) => {
+  try {
+    const grades = await Submission.find().populate('user_id').populate('quiz_id');
+    res.json(grades);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Create quiz
 router.post('/', async (req, res) => {
   try {

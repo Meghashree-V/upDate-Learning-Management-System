@@ -7,7 +7,9 @@ const Assignment = require('../models/Assignment');
 // Fetch all grades
 router.get('/', async (req, res) => {
   try {
-    const grades = await Grade.find();
+    const grades = await Submission.find()
+      .populate('user_id')   // populate user info if needed
+      .populate('quiz_id');  // populate quiz info if needed
     res.json(grades);
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -7,6 +7,9 @@ import authRouter from './routes/auth';
 import coursesRouter from './routes/courses';
 import usersRouter from './routes/userRoutes';
 import assignmentsRouter from './routes/assignments';
+import quizzesRouter from './routes/quizzes';
+import gradesRouter from './routes/grades';
+import submissionsRouter from './routes/submissions';
 import notificationsRouter from './routes/notifications';
 import enrollmentRoutes from "./routes/enrollmentRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
@@ -15,6 +18,8 @@ import userActivityRoutes from "./routes/userActivityRoutes.js";
 import revenueRoutes from "./routes/revenueRoutes.js";
 import kpiRoutes from "./routes/kpiRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+
+
 
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5000;
@@ -49,6 +54,9 @@ app.use('/api/auth', authRouter);
 app.use('/api/courses', coursesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/assignments', assignmentsRouter);
+app.use('/api/quizzes', quizzesRouter );
+app.use('/api/grades', gradesRouter );
+app.use('/api/submissions', submissionsRouter );
 app.use('/api/notifications', notificationsRouter);
 app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/courses", courseRoutes);

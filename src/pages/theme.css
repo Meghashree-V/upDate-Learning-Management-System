@@ -1,0 +1,5 @@
+/* White & red theme */
+body { background: #fff; color: #222; font-family: Arial, sans-serif; }
+.header { background: linear-gradient(90deg,#fff 60%, #ff4d4f); padding: 12px; border-radius: 6px; }
+button { background: #ff4d4f; color: #fff; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; }
+.card { border: 1px solid #ffd6d6; padding: 12px; border-radius: 8px; }
