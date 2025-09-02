@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,20 @@ const Addcourses = () => {
   const [duration, setDuration] = useState("");
   const [price, setPrice] = useState("");
   const [instructor, setInstructor] = useState("");
+const [educators, setEducators] = useState<any[]>([]);
+
+  // Fetch educators for instructor dropdown
+  useEffect(() => {
+    const fetchEducators = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/educators");
+        setEducators(res.data);
+      } catch (err) {
+        setEducators([]);
+      }
+    };
+    fetchEducators();
+  }, []);
   const [level, setLevel] = useState("");
   const [capacity, setCapacity] = useState("");
   const [enrollmentType, setEnrollmentType] = useState("");
@@ -162,14 +176,20 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="instructor">Instructor *</Label>
-                    <Select onValueChange={setInstructor}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select instructor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none" disabled>No instructors available</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Select value={instructor} onValueChange={setInstructor}>
+  <SelectTrigger>
+    <SelectValue placeholder="Select instructor" />
+  </SelectTrigger>
+  <SelectContent>
+    {educators.length === 0 ? (
+      <SelectItem value="none" disabled>No instructors available</SelectItem>
+    ) : (
+      educators.map((e: any) => (
+        <SelectItem key={e._id} value={e._id}>{e.name}</SelectItem>
+      ))
+    )}
+  </SelectContent>
+</Select>
                   </div>
                 </div>
                 <div className="space-y-2">

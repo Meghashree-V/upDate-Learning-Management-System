@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +52,41 @@ const StudentsEnrolled = () => {
   const [filterCourse, setFilterCourse] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  const students: any[] = [];
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Fetch students from backend
+  useEffect(() => {
+    const fetchStudents = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:5000/api/auth/students");
+        const data = await res.json();
+        // Map backend data to table fields
+        const mapped = data.map((s: any) => ({
+          id: s._id,
+          name: `${s.firstName} ${s.lastName}`,
+          email: s.email,
+          avatar: '', // Optionally use a default or gravatar
+          course: s.course || 'N/A', // Adjust if you have course info
+          completedLessons: s.completedLessons || 0,
+          totalLessons: s.totalLessons || 0,
+          progress: s.progress || 0,
+          status: s.status || 'active',
+          grade: s.grade || 'A',
+          lastAccess: s.updatedAt || s.createdAt || new Date().toISOString(),
+          timeSpent: s.timeSpent || '0h',
+        }));
+        setStudents(mapped);
+      } catch (err) {
+        setError("Failed to fetch students");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStudents();
+  }, []);
 
   const courses: string[] = [];
 

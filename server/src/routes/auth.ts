@@ -87,4 +87,14 @@ router.post('/admin/signin', async (req: Request, res: Response) => {
   }
 });
 
+// GET all students
+router.get('/students', async (req, res) => {
+  try {
+    const students = await User.find({ role: 'student' });
+    res.json(students);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch students' });
+  }
+});
+
 export default router;

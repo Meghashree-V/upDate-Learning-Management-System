@@ -12,11 +12,119 @@ import {
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter } from 'lucide-react';
-import { courses, categories } from '@/data/courses';
+import axios from 'axios';
+
+const dummyCourses = [
+  {
+    id: 'd1',
+    title: 'Advanced Python',
+    description: 'Advance your Python skills with real-world projects.',
+    instructor: 'Instructor',
+    price: 350,
+    category: 'Web Development',
+    thumbnail: '/src/assets/course-programming.jpg',
+    status: 'published',
+    enrollments: 0,
+    duration: '10h 30m',
+    rating: 4.7,
+    level: 'Beginner',
+    isFree: false,
+  },
+  {
+    id: 'd2',
+    title: 'Data Analytics',
+    description: 'This course introduces students to data analytics concepts, tools, and techniques. Students will learn data wrangling, visualization, and analysis.',
+    instructor: 'Neha K',
+    price: 98,
+    category: 'Data Science',
+    thumbnail: '/src/assets/course-data-science.jpg',
+    status: 'published',
+    enrollments: 0,
+    duration: '20h',
+    rating: 4.6,
+    level: 'Beginner',
+    isFree: false,
+  },
+  {
+    id: 'd3',
+    title: 'UI/UX Design Essentials',
+    description: 'Master the basics of UI/UX design, wireframing, and prototyping.',
+    instructor: 'Jessica Park',
+    price: 799,
+    category: 'Design',
+    thumbnail: '/src/assets/course-design.jpg',
+    status: 'published',
+    enrollments: 0,
+    duration: '8h 15m',
+    rating: 4.5,
+    level: 'Intermediate',
+    isFree: false,
+  },
+  {
+    id: 'd4',
+    title: 'Digital Marketing 2024',
+    description: 'Learn digital marketing strategies, SEO, and social media advertising.',
+    instructor: 'Ravi Singh',
+    price: 499,
+    category: 'Marketing',
+    thumbnail: '/src/assets/course-marketing.jpg',
+    status: 'published',
+    enrollments: 0,
+    duration: '12h',
+    rating: 4.8,
+    level: 'Advanced',
+    isFree: false,
+  },
+  {
+    id: 'd5',
+    title: 'The Complete Python Pro Bootcamp',
+    description: 'Become a Python pro with this comprehensive bootcamp.',
+    instructor: 'Angela Yu',
+    price: 1999,
+    category: 'Web Development',
+    thumbnail: '/src/assets/course-programming.jpg',
+    status: 'published',
+    enrollments: 0,
+    duration: '24h',
+    rating: 4.9,
+    level: 'Intermediate',
+    isFree: false,
+  },
+  {
+    id: 'd6',
+    title: 'Flutter & Dart - The Complete Guide',
+    description: 'Build beautiful native apps for iOS and Android with Flutter & Dart.',
+    instructor: 'Maximilian Schwarzmüller',
+    price: 2499,
+    category: 'Mobile Development',
+    thumbnail: '/src/assets/course-programming.jpg',
+    status: 'published',
+    enrollments: 0,
+    duration: '40h',
+    rating: 4.8,
+    level: 'Advanced',
+    isFree: false,
+  },
+  {
+    id: 'd7',
+    title: 'AWS Certified Cloud Practitioner',
+    description: 'Prepare for the AWS Cloud Practitioner exam with hands-on labs.',
+    instructor: 'Stephane Maarek',
+    price: 899,
+    category: 'Data Science',
+    thumbnail: '/src/assets/course-data-science.jpg',
+    status: 'published',
+    enrollments: 0,
+    duration: '14h',
+    rating: 4.7,
+    level: 'Intermediate',
+    isFree: false,
+  },
+];
 
 const Courses = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [filteredCourses, setFilteredCourses] = useState(courses);
+  const [filteredCourses, setFilteredCourses] = useState(dummyCourses);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
@@ -32,7 +140,8 @@ const Courses = () => {
 
   // Filter courses based on all criteria
   useEffect(() => {
-    let filtered = courses;
+    const courses = dummyCourses;
+let filtered = courses;
 
     // Search filter
     if (searchTerm) {
@@ -45,7 +154,7 @@ const Courses = () => {
 
     // Category filter
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(course => course.category === selectedCategory);
+      filtered = filtered.filter(course => (course.category || '').toLowerCase() === selectedCategory.toLowerCase());
     }
 
     // Level filter
@@ -120,9 +229,9 @@ const Courses = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+                {Array.from(new Set(courses.map((c) => String(c.category)))).map((category) => (
+                  <SelectItem key={String(category)} value={String(category)}>
+                    {String(category)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -175,7 +284,7 @@ const Courses = () => {
         {filteredCourses.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredCourses.map((course) => (
-              <CourseCard key={course.id} {...course} />
+              <CourseCard key={course.id} {...course} image={course.thumbnail} students={course.enrollments} level={course.level as 'Beginner' | 'Intermediate' | 'Advanced'} />
             ))}
           </div>
         ) : (

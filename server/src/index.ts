@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import authRouter from './routes/auth';
+import educatorRouter from './routes/educator';
+import courseRouter from './routes/course';
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5000;
 const MONGODB_URI = process.env.MONGODB_URI || '';
@@ -28,6 +30,8 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/educators', educatorRouter);
+app.use('/api/courses', courseRouter);
 
 async function start() {
   try {

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,34 +46,56 @@ const Educator = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  const educators: Array<{
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    specialization: string;
-    status: "active" | "inactive";
-    coursesCount: number;
-    studentsCount: number;
-    rating: number;
-    joinDate: string;
-    avatar: string;
-    bio: string;
-  }> = [];
 
-  const filteredEducators = educators.filter(educator => {
-    const matchesSearch = educator.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         educator.specialization.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === "all" || educator.status === filterStatus;
-    return matchesSearch && matchesStatus;
+  const [educators, setEducators] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [addForm, setAddForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    specialization: "",
+    status: "active",
+    avatar: "",
+    bio: ""
   });
 
-  const handleAddEducator = () => {
-    toast({
-      title: "Educator Added Successfully!",
-      description: "New educator has been added to the platform.",
-    });
+  useEffect(() => {
+    fetchEducators();
+  }, []);
+
+  const fetchEducators = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get("http://localhost:5000/api/educators");
+      setEducators(res.data);
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to load educators." });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleAddEducator = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/educators", addForm);
+      toast({ title: "Educator Added Successfully!", description: "New educator has been added to the platform." });
+      setAddForm({ name: "", email: "", phone: "", specialization: "", status: "active", avatar: "", bio: "" });
+      fetchEducators();
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to add educator." });
+    }
+  };
+
+  const filteredEducators = Array.isArray(educators) ? educators.filter(educator => {
+    const name = educator.name || "";
+    const specialization = educator.specialization || "";
+    const status = educator.status || "";
+    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         specialization.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === "all" || status === filterStatus;
+    return matchesSearch && matchesStatus;
+  }) : [];
+
 
   return (
     <div className="space-y-6">
@@ -83,181 +106,111 @@ const Educator = () => {
             Manage instructors and teaching staff
           </p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary-hover">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Educator
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add New Educator</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" placeholder="Enter educator's name" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" placeholder="Enter email" />
-                </div>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" placeholder="Enter phone number" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="specialization">Specialization</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select specialization" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="web-dev">Web Development</SelectItem>
-                      <SelectItem value="data-science">Data Science</SelectItem>
-                      <SelectItem value="design">UI/UX Design</SelectItem>
-                      <SelectItem value="marketing">Digital Marketing</SelectItem>
-                      <SelectItem value="mobile">Mobile Development</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea id="bio" placeholder="Enter educator's bio" />
-              </div>
-              <Button onClick={handleAddEducator} className="bg-primary hover:bg-primary-hover">
-                Add Educator
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <div>
+          <Input
+            placeholder="Search by name or specialization"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-64"
+          />
+        </div>
       </div>
-
-      {/* Filters and Search */}
+      {/* Add Educator Form */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4 items-center">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search educators..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter by status" />
+        <CardHeader>
+          <CardTitle>Add New Educator</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 flex-wrap">
+            <Input
+              placeholder="Name"
+              value={addForm.name}
+              onChange={e => setAddForm({ ...addForm, name: e.target.value })}
+              className="w-48"
+            />
+            <Input
+              placeholder="Email"
+              value={addForm.email}
+              onChange={e => setAddForm({ ...addForm, email: e.target.value })}
+              className="w-48"
+            />
+            <Input
+              placeholder="Phone"
+              value={addForm.phone}
+              onChange={e => setAddForm({ ...addForm, phone: e.target.value })}
+              className="w-40"
+            />
+            <Input
+              placeholder="Specialization"
+              value={addForm.specialization}
+              onChange={e => setAddForm({ ...addForm, specialization: e.target.value })}
+              className="w-40"
+            />
+            <Select value={addForm.status} onValueChange={v => setAddForm({ ...addForm, status: v })}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
+            <Input
+              placeholder="Avatar URL (optional)"
+              value={addForm.avatar}
+              onChange={e => setAddForm({ ...addForm, avatar: e.target.value })}
+              className="w-48"
+            />
+            <Input
+              placeholder="Bio (optional)"
+              value={addForm.bio}
+              onChange={e => setAddForm({ ...addForm, bio: e.target.value })}
+              className="w-64"
+            />
+            <Button className="self-end" onClick={handleAddEducator} disabled={loading || !addForm.name || !addForm.email}>
+              Add Educator
+            </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* Educators Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredEducators.map((educator) => (
-          <Card key={educator.id} className="shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={educator.avatar} />
-                    <AvatarFallback>
-                      {educator.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-lg">{educator.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{educator.specialization}</p>
+      {/* Educators List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Educator List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div>Loading...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredEducators.map(educator => (
+                <Card key={educator._id} className="p-4 flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={educator.avatar} />
+                      <AvatarFallback>{educator.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{educator.name}</div>
+                      <div className="text-xs text-muted-foreground">{educator.email}</div>
+                      <div className="text-xs text-muted-foreground">{educator.specialization}</div>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>View Profile</DropdownMenuItem>
-                    <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                    <DropdownMenuItem>View Courses</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">
-                      Deactivate
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Badge variant={educator.status === 'active' ? 'default' : 'secondary'}>
-                  {educator.status === 'active' ? 'Active' : 'Inactive'}
-                </Badge>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-warning text-warning" />
-                  <span className="text-sm font-medium">{educator.rating}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{educator.email}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{educator.phone}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 text-primary">
-                    <BookOpen className="h-4 w-4" />
-                    <span className="font-bold">{educator.coursesCount}</span>
+                  <div className="flex gap-2 text-xs">
+                    <Badge>{educator.status}</Badge>
+                    <Badge variant="secondary">Courses: {educator.coursesCount || 0}</Badge>
+                    <Badge variant="secondary">Students: {educator.studentsCount || 0}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">Courses</p>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 text-primary">
-                    <Users className="h-4 w-4" />
-                    <span className="font-bold">{educator.studentsCount}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Students</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
-                <Calendar className="h-3 w-3" />
-                <span>Joined: {new Date(educator.joinDate).toLocaleDateString()}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredEducators.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <p className="text-muted-foreground">No educators found matching your criteria.</p>
-          </CardContent>
-        </Card>
-      )}
+                  <div className="text-xs text-muted-foreground">Joined: {educator.joinDate ? new Date(educator.joinDate).toLocaleDateString() : "-"}</div>
+                  <div className="text-xs">{educator.bio}</div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
+}
 
 export default Educator;

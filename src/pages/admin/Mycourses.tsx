@@ -40,11 +40,12 @@ import {
   Copy,
   Trash,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const Mycourses = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -56,25 +57,117 @@ const Mycourses = () => {
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchAndCombineCourses = async () => {
+      setLoading(true);
+      // Dummy courses
+      const dummyCourses = [
+        {
+          _id: "d1",
+          title: "Modern React Bootcamp",
+          instructor: { name: "Sarah Lee" },
+          price: 1499,
+          category: "Web Development",
+          status: "published",
+          thumbnail: "/src/assets/course-programming.jpg",
+          enrollments: 120,
+          duration: "12h 30m",
+          rating: 4.8,
+        },
+        {
+          _id: "d2",
+          title: "Data Science Masterclass",
+          instructor: { name: "Dr. Amit Kumar" },
+          price: 1799,
+          category: "Data Science",
+          status: "published",
+          thumbnail: "/src/assets/course-data-science.jpg",
+          enrollments: 85,
+          duration: "9h 15m",
+          rating: 4.7,
+        },
+        {
+          _id: "d3",
+          title: "UI/UX Design Essentials",
+          instructor: { name: "Jessica Park" },
+          price: 1299,
+          category: "Design",
+          status: "draft",
+          thumbnail: "/src/assets/course-design.jpg",
+          enrollments: 40,
+          duration: "7h 45m",
+          rating: 4.5,
+        },
+        {
+          _id: "d4",
+          title: "Digital Marketing 2024",
+          instructor: { name: "Ravi Singh" },
+          price: 999,
+          category: "Marketing",
+          status: "published",
+          thumbnail: "/src/assets/course-marketing.jpg",
+          enrollments: 200,
+          duration: "6h 10m",
+          rating: 4.6,
+        },
+        {
+          _id: "d5",
+          title: "The Complete Python Pro Bootcamp",
+          instructor: { name: "Angela Yu" },
+          price: 1999,
+          category: "Web Development",
+          status: "published",
+          thumbnail: "/src/assets/course-programming.jpg",
+          enrollments: 350,
+          duration: "24h",
+          rating: 4.9,
+        },
+        {
+          _id: "d6",
+          title: "Flutter & Dart - The Complete Guide",
+          instructor: { name: "Maximilian Schwarzmüller" },
+          price: 2499,
+          category: "Mobile Development",
+          status: "review",
+          thumbnail: "/src/assets/course-programming.jpg",
+          enrollments: 150,
+          duration: "40h",
+          rating: 4.8,
+        },
+        {
+          _id: "d7",
+          title: "AWS Certified Cloud Practitioner",
+          instructor: { name: "Stephane Maarek" },
+          price: 899,
+          category: "Data Science",
+          status: "published",
+          thumbnail: "/src/assets/course-data-science.jpg",
+          enrollments: 500,
+          duration: "14h",
+          rating: 4.7,
+        },
+      ];
       try {
         const res = await axios.get("http://localhost:5000/api/courses");
-        setCourses(res.data);
+        // Mark real courses with a property to distinguish
+        const realCourses = (res.data || []).map((c: any) => ({ ...c, _isReal: true }));
+        setCourses([...realCourses, ...dummyCourses]);
       } catch (err) {
-        console.error("Error fetching courses:", err);
+        setCourses([...dummyCourses]);
       } finally {
         setLoading(false);
       }
     };
-    fetchCourses();
+    fetchAndCombineCourses();
   }, []);
 
   const categories = ["Web Development", "Data Science", "Design", "Marketing", "Mobile Development"];
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch =
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.instructor?.toLowerCase().includes(searchTerm.toLowerCase());
+      (course.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      ((typeof course.instructor === "string" ? course.instructor : (course.instructor?.name || ""))
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()));
     const matchesStatus = filterStatus === "all" || course.status === filterStatus;
     const matchesCategory = filterCategory === "all" || course.category === filterCategory;
     return matchesSearch && matchesStatus && matchesCategory;
@@ -101,18 +194,20 @@ const Mycourses = () => {
   // 🧹 delete confirmed (called from AlertDialog "Delete")
   const handleConfirmDelete = async () => {
     if (!deleteCourseId) return;
-    try {
-      setDeleting(true);
-      await axios.delete(`http://localhost:5000/api/courses/${deleteCourseId}`);
-      setCourses(prev => prev.filter(c => c._id !== deleteCourseId));
-      setDeleteCourseId(null);
-    } catch (error) {
-      console.error("Error deleting course:", error);
-      alert("Failed to delete the course. Please try again.");
-    } finally {
-      setDeleting(false);
+    setDeleting(true);
+    const courseToDelete = courses.find(c => c._id === deleteCourseId);
+    if (courseToDelete && courseToDelete._isReal) {
+      try {
+        await axios.delete(`http://localhost:5000/api/courses/${deleteCourseId}`);
+      } catch (err) {
+        alert("Failed to delete real course from backend.");
+      }
     }
+    setCourses(prev => prev.filter(c => c._id !== deleteCourseId));
+    setDeleteCourseId(null);
+    setDeleting(false);
   };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -252,17 +347,31 @@ const Mycourses = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredCourses.map((course) => (
             <Card key={course._id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <img
-                src={`http://localhost:5000${course.thumbnail.startsWith("/") ? course.thumbnail : "/" + course.thumbnail}`}
-                alt={course.title}
-                className="w-full h-48 object-cover rounded-t-xl"
-              />
+              <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden rounded-t-xl">
+                {course.thumbnail ? (
+                  <img
+                    src={`http://localhost:5000${course.thumbnail.startsWith("/") ? course.thumbnail : "/" + course.thumbnail}`}
+                    alt={course.title}
+                    className="w-full h-48 object-cover"
+                  />
+                ) : (
+                  <img
+                    src="/placeholder.svg"
+                    alt="No thumbnail"
+                    className="w-24 h-24 opacity-60"
+                  />
+                )}
+              </div>
 
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <CardTitle className="line-clamp-2">{course.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{course.instructor || "Unknown"}</p>
+                    <p className="text-sm text-muted-foreground">{
+  typeof course.instructor === "object"
+    ? course.instructor?.name || "Unknown"
+    : course.instructor || "Unknown"
+}</p>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -271,21 +380,39 @@ const Mycourses = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => navigate(`/courses/${course._id}`)}>
+                      <DropdownMenuItem
+                        onClick={() => navigate(`/courses/${course._id}`)}
+                        disabled={!course._id}
+                      >
                         <Eye className="h-4 w-4 mr-2" />
                         View
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/admin/editcourse/${course._id}`)}>
+                      <DropdownMenuItem
+                        onClick={() => navigate(`/admin/editcourse/${course._id}`)}
+                        disabled={!course._id}
+                      >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={async () => {
+                        // Defensive: don't duplicate if missing required fields
+                        if (!course.title) return alert("Cannot duplicate: missing course title");
+                        const { _id, ...rest } = course;
+                        const duplicated = { ...rest, title: `Copy of ${course.title}` };
+                        try {
+                          await axios.post("http://localhost:5000/api/courses", duplicated);
+                          window.location.reload();
+                        } catch (err) {
+                          alert("Failed to duplicate course");
+                        }
+                      }}>
                         <Copy className="h-4 w-4 mr-2" />
                         Duplicate
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"
-                        onClick={() => setDeleteCourseId(course._id)}
+                        disabled={!course._id}
+                        onClick={() => course._id && setDeleteCourseId(course._id)}
                       >
                         <Trash className="h-4 w-4 mr-2" />
                         Delete
@@ -311,7 +438,7 @@ const Mycourses = () => {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold">${course.price || 0}</span>
+                  <span className="text-lg font-bold">₹{course.price || 0}</span>
                   <Badge className={getStatusColor(course.status)}>
                     {getStatusText(course.status)}
                   </Badge>

@@ -10,8 +10,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
 
 export function Navber() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear admin token from local storage
+    localStorage.removeItem("adminToken");
+    // Redirect to the sign-in page
+    navigate("/Signin");
+  };
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-6 shadow-sm">
       <div className="flex items-center gap-4">
@@ -70,7 +79,7 @@ export function Navber() {
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Logout</span>
             </DropdownMenuItem>

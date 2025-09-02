@@ -5,29 +5,35 @@ import { Badge } from "@/components/ui/badge";
 import { Play, Clock, Award, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const enrolledCourses: Array<{
-  id: number;
-  title: string;
-  instructor: string;
-  progress: number;
-  totalLessons: number;
-  completedLessons: number;
-  timeSpent: string;
-  lastAccessed: string;
-  image: string;
-  category: string;
-  status: string;
-}> = [];
+import { useEffect, useState } from "react";
 
 const MyEnrollments = () => {
+  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadEnrolled = () => {
+      const enrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+      setEnrolledCourses(enrolled);
+    };
+    loadEnrolled();
+    window.addEventListener('storage', loadEnrolled);
+    return () => window.removeEventListener('storage', loadEnrolled);
+  }, []);
+
   const inProgressCourses = enrolledCourses.filter(course => course.status === "In Progress");
   const completedCourses = enrolledCourses.filter(course => course.status === "Completed");
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">My Learning</h1>
-        <p className="text-muted-foreground">Track your progress and continue your learning journey</p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">My Learning</h1>
+          <p className="text-muted-foreground">Track your progress and continue your learning journey</p>
+        </div>
+        <Button variant="outline" onClick={() => {
+          const enrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+          setEnrolledCourses(enrolled);
+        }}>Refresh</Button>
       </div>
 
       {/* Learning Stats */}
@@ -43,7 +49,6 @@ const MyEnrollments = () => {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
@@ -55,7 +60,6 @@ const MyEnrollments = () => {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
@@ -67,13 +71,17 @@ const MyEnrollments = () => {
             </div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
               <Clock className="w-8 h-8 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">0h</p>
+                <p className="text-2xl font-bold">{
+                  enrolledCourses.reduce((sum, c) => {
+                    const h = parseInt((c.timeSpent||'0h').replace(/[^\d]/g, ''));
+                    return sum + (isNaN(h) ? 0 : h);
+                  }, 0)
+                }h</p>
                 <p className="text-sm text-muted-foreground">Total Time</p>
               </div>
             </div>
@@ -81,23 +89,34 @@ const MyEnrollments = () => {
         </Card>
       </div>
 
+      {/* No courses message */}
+      {enrolledCourses.length === 0 && (
+        <div className="text-center py-16">
+          <h2 className="text-2xl font-semibold mb-2">You have not enrolled in any courses yet.</h2>
+          <p className="text-muted-foreground mb-4">Browse our catalog and enroll to start learning!</p>
+          <Link to="/student/courses">
+            <Button variant="default">Browse Courses</Button>
+          </Link>
+        </div>
+      )}
+
       {/* Continue Learning */}
       {inProgressCourses.length > 0 && (
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Continue Learning</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {inProgressCourses.map((course) => (
-              <Card key={course.id} className="hover:shadow-medium transition-shadow">
+              <Card key={course._id || course.id} className="hover:shadow-medium transition-shadow">
                 <CardHeader className="p-0">
                   <div className="relative">
                     <img
-                      src={course.image}
+                      src={course.image || course.thumbnail}
                       alt={course.title}
                       className="w-full h-48 object-cover rounded-t-lg"
                     />
                     <div className="absolute top-3 left-3">
                       <Badge variant="secondary" className="bg-background/90">
-                        {course.category}
+                        {typeof course.category === 'string' ? course.category : JSON.stringify(course.category)}
                       </Badge>
                     </div>
                     <div className="absolute bottom-3 right-3">
@@ -110,7 +129,7 @@ const MyEnrollments = () => {
                 
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-lg mb-2 line-clamp-2">{course.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">by {course.instructor}</p>
+                  <p className="text-sm text-muted-foreground mb-3">by {typeof course.instructor === 'string' ? course.instructor : (course.instructor?.name || JSON.stringify(course.instructor))}</p>
                   
                   <div className="space-y-3">
                     <div>
@@ -129,7 +148,7 @@ const MyEnrollments = () => {
                 </CardContent>
                 
                 <div className="p-4 pt-0">
-                  <Link to={`/student/player/${course.id}`}>
+                  <Link to={`/student/player/${course._id || course.id}`}>
                     <Button className="w-full bg-gradient-primary:bg-primary-hover">
                       <Play className="w-4 h-4 mr-2" />
                       Continue Learning
@@ -148,17 +167,17 @@ const MyEnrollments = () => {
           <h2 className="text-2xl font-semibold mb-4">Completed Courses</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {completedCourses.map((course) => (
-              <Card key={course.id} className="hover:shadow-medium transition-shadow">
+              <Card key={course._id || course.id} className="hover:shadow-medium transition-shadow">
                 <CardHeader className="p-0">
                   <div className="relative">
                     <img
-                      src={course.image}
+                      src={course.image || course.thumbnail}
                       alt={course.title}
                       className="w-full h-48 object-cover rounded-t-lg"
                     />
                     <div className="absolute top-3 left-3">
                       <Badge variant="secondary" className="bg-background/90">
-                        {course.category}
+                        {typeof course.category === 'string' ? course.category : JSON.stringify(course.category)}
                       </Badge>
                     </div>
                     <div className="absolute bottom-3 right-3">
@@ -172,7 +191,7 @@ const MyEnrollments = () => {
                 
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-lg mb-2 line-clamp-2">{course.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">by {course.instructor}</p>
+                  <p className="text-sm text-muted-foreground mb-3">by {typeof course.instructor === 'string' ? course.instructor : (course.instructor?.name || JSON.stringify(course.instructor))}</p>
                   
                   <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                     <span>Completed: {course.timeSpent}</span>
@@ -181,13 +200,13 @@ const MyEnrollments = () => {
                 </CardContent>
                 
                 <div className="p-4 pt-0 space-y-2">
-                  <Link to={`/student/certificates/${course.id}`}>
+                  <Link to={`/student/certificates/${course._id || course.id}`}>
                     <Button variant="outline" className="w-full">
                       <Award className="w-4 h-4 mr-2" />
                       View Certificate
                     </Button>
                   </Link>
-                  <Link to={`/student/player/${course.id}`}>
+                  <Link to={`/student/player/${course._id || course.id}`}>
                     <Button variant="ghost" className="w-full">
                       Review Course
                     </Button>
