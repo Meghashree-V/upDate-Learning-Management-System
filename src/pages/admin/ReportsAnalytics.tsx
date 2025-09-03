@@ -1,95 +1,29 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  Area,
-  AreaChart,
-} from "recharts";
-import {
-  TrendingUp,
-  TrendingDown,
-  Users,
-  BookOpen,
-  DollarSign,
-  Clock,
-  Download,
-  Calendar,
-} from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Area, AreaChart } from "recharts";
+import { TrendingUp, TrendingDown, Users, BookOpen, DollarSign, Clock, Download, Calendar } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import {
-  fetchEnrollmentData,
-  fetchCoursePerformanceData,
-  fetchCategoryDistributionData,
-  fetchUserActivityData,
-  fetchRevenueData,
-  fetchKpiCardsData,
-  fetchStudentAnalyticsData,
-} from "@/api/mockAnalyticsApi";
+import axios from "axios";
+
+const API = "http://localhost:5000/api/analytics"; // ✅ backend route
 
 interface KpiCard {
   title: string;
   value: string;
   change: string;
   trend: "up" | "down";
-  icon: string; // Changed to string to match mock data
+  icon: string;
   color: string;
 }
-
-interface EnrollmentData {
-  month: string;
-  enrollments: number;
-  revenue: number;
-}
-
-interface CoursePerformanceData {
-  course: string;
-  enrollments: number;
-  completion: number;
-  rating: number;
-}
-
-interface CategoryData {
-  name: string;
-  value: number;
-  color: string;
-}
-
-interface UserActivityData {
-  time: string;
-  active: number;
-}
-
-interface RevenueData {
-  month: string;
-  revenue: number;
-  target: number;
-}
-
-interface StudentAnalyticsData {
-  newStudents: number;
-  activeStudents: number;
-  retentionRate: number;
-}
+interface EnrollmentData { month: string; enrollments: number; revenue: number; }
+interface CoursePerformanceData { course: string; enrollments: number; completion: number; rating: number; }
+interface CategoryData { name: string; value: number; color: string; }
+interface UserActivityData { time: string; active: number; }
+interface RevenueData { month: string; revenue: number; target: number; }
+interface StudentAnalyticsData { newStudents: number; activeStudents: number; retentionRate: number; }
 
 const ReportsAnalytics = () => {
   const [enrollmentData, setEnrollmentData] = useState<EnrollmentData[]>([]);
@@ -102,39 +36,57 @@ const ReportsAnalytics = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filterDays, setFilterDays] = useState("30");
+  const [revenueBreakdown, setRevenueBreakdown] = useState<any[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [topCourses, setTopCourses] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTopCourses = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/top-revenue-courses");
+        setTopCourses(res.data);
+      } catch (err) {
+        console.error("Error fetching top courses:", err);
+      }
+    };
+    fetchTopCourses();
+  }, []);
+
+
+  useEffect(() => {
+    const fetchRevenueBreakdown = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/revenue-breakdown");
+        setRevenueBreakdown(res.data.breakdown);
+        setTotalRevenue(res.data.total);
+      } catch (err) {
+        console.error("Error fetching revenue breakdown:", err);
+      }
+    };
+    fetchRevenueBreakdown();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [
-          enrollments,
-          coursePerformance,
-          categories,
-          userActivity,
-          revenue,
-          kpis,
-          students,
-        ] = await Promise.all([
-          fetchEnrollmentData(),
-          fetchCoursePerformanceData(),
-          fetchCategoryDistributionData(),
-          fetchUserActivityData(),
-          fetchRevenueData(),
-          fetchKpiCardsData(),
-          fetchStudentAnalyticsData(),
-        ]);
+        const [enrollments, coursePerformance, categories, userActivity, revenue, kpis, students] =
+          await Promise.all([
+            axios.get(`${API}/enrollments`).then(res => res.data),
+            axios.get(`${API}/course-performance`).then(res => res.data),
+            axios.get(`${API}/categories`).then(res => res.data),
+            axios.get(`${API}/user-activity`).then(res => res.data),
+            axios.get(`${API}/revenue`).then(res => res.data),
+            axios.get(`${API}/kpis`).then(res => res.data),
+            axios.get(`${API}/students?days=${filterDays}`).then(res => res.data),
+          ]);
         setEnrollmentData(enrollments);
         setCoursePerformanceData(coursePerformance);
         setCategoryData(categories);
         setUserActivityData(userActivity);
         setRevenueData(revenue);
-        setKpiCards(kpis.map(kpi => ({
-          ...kpi,
-          icon: kpi.icon, // Keep icon as string
-          // Dynamically map icon strings to actual LucideReact components
-          // This will be handled in the render section below
-        })));
+        setKpiCards(kpis);
         setStudentAnalytics(students);
       } catch (err) {
         setError("Failed to fetch analytics data.");
@@ -143,25 +95,13 @@ const ReportsAnalytics = () => {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, []);
+  }, [filterDays]);
 
-  // Map icon strings to LucideReact components
-  const iconMap: { [key: string]: React.ElementType } = {
-    DollarSign,
-    Users,
-    BookOpen,
-    Clock,
-  };
+  const iconMap: { [key: string]: React.ElementType } = { DollarSign, Users, BookOpen, Clock };
 
-  if (loading) {
-    return <div className="text-center py-10">Loading analytics data...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-10 text-destructive">Error: {error}</div>;
-  }
+  if (loading) return <div className="text-center py-10">Loading analytics data...</div>;
+  if (error) return <div className="text-center py-10 text-destructive">Error: {error}</div>;
 
   return (
     <div className="space-y-6">
@@ -173,7 +113,7 @@ const ReportsAnalytics = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Select defaultValue="30">
+          <Select value={filterDays} onValueChange={(value) => setFilterDays(value)}>
             <SelectTrigger className="w-[180px]">
               <Calendar className="h-4 w-4 mr-2" />
               <SelectValue />
@@ -185,10 +125,15 @@ const ReportsAnalytics = () => {
               <SelectItem value="365">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
+
+          <Button variant="outline" onClick={() => {
+            window.open("http://localhost:5000/api/analytics/export-report", "_blank");
+          }}>
             <Download className="h-4 w-4 mr-2" />
             Export Report
           </Button>
+
+
         </div>
       </div>
 
@@ -243,10 +188,10 @@ const ReportsAnalytics = () => {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip />
-                    <Area 
-                      type="monotone" 
-                      dataKey="enrollments" 
-                      stroke="hsl(var(--primary))" 
+                    <Area
+                      type="monotone"
+                      dataKey="enrollments"
+                      stroke="hsl(var(--primary))"
                       fill="hsl(var(--primary))"
                       fillOpacity={0.3}
                     />
@@ -292,10 +237,10 @@ const ReportsAnalytics = () => {
                   <XAxis dataKey="time" />
                   <YAxis />
                   <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="active" 
-                    stroke="hsl(var(--primary))" 
+                  <Line
+                    type="monotone"
+                    dataKey="active"
+                    stroke="hsl(var(--primary))"
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -392,10 +337,10 @@ const ReportsAnalytics = () => {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="enrollments" 
-                    stroke="hsl(var(--primary))" 
+                  <Area
+                    type="monotone"
+                    dataKey="enrollments"
+                    stroke="hsl(var(--primary))"
                     fill="hsl(var(--primary))"
                     fillOpacity={0.3}
                   />
@@ -430,23 +375,19 @@ const ReportsAnalytics = () => {
                 <CardTitle>Revenue Breakdown</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span>Course Sales</span>
-                  <span className="font-bold">$128,400</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Subscriptions</span>
-                  <span className="font-bold">$14,400</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Certifications</span>
-                  <span className="font-bold">$6,800</span>
-                </div>
+                {revenueBreakdown.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center">
+                    <span>{item._id || "Uncategorized"}</span>
+                    <span className="font-bold">${item.totalRevenue.toLocaleString()}</span>
+                  </div>
+                ))}
+
                 <div className="flex justify-between items-center border-t pt-2">
                   <span className="font-bold">Total</span>
-                  <span className="font-bold text-primary">$149,600</span>
+                  <span className="font-bold text-primary">${totalRevenue.toLocaleString()}</span>
                 </div>
               </CardContent>
+
             </Card>
 
             <Card>
@@ -454,15 +395,16 @@ const ReportsAnalytics = () => {
                 <CardTitle>Top Revenue Courses</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {coursePerformanceData.slice(0, 3).map((course, index) => (
+                {topCourses.map((course, index) => (
                   <div key={index} className="flex justify-between items-center">
-                    <span className="text-sm">{course.course}</span>
+                    <span className="text-sm">{course.title}</span>
                     <Badge variant="outline">
-                      ${(course.enrollments * 89.99).toLocaleString()}
+                      ${course.totalRevenue.toLocaleString()}
                     </Badge>
                   </div>
                 ))}
               </CardContent>
+
             </Card>
           </div>
         </TabsContent>

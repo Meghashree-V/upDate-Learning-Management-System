@@ -151,7 +151,7 @@ const CourseList = () => {
 
   useEffect(() => {
     let filtered = [...courses];
-    
+
     // Filter by search query
     const searchQuery = searchParams.get("search");
     if (searchQuery) {
@@ -200,8 +200,8 @@ const CourseList = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">
           {searchParams.get("search") ? `Search Results for "${searchParams.get("search")}"` :
-           searchParams.get("category") ? `${searchParams.get("category")} Courses` :
-           "All Courses"}
+            searchParams.get("category") ? `${searchParams.get("category")} Courses` :
+              "All Courses"}
         </h1>
         <p className="text-muted-foreground">
           {filteredCourses.length} course{filteredCourses.length !== 1 ? 's' : ''} found
@@ -237,101 +237,100 @@ const CourseList = () => {
           </div>
         ) : (
           filteredCourses.map((course) => (
-          <Card key={course._id} className="group hover:shadow-medium transition-all duration-300 border-border">
-            <CardHeader className="p-0">
-              <div className="relative overflow-hidden rounded-t-lg">
-                <img
-                  src={`http://localhost:5000${course.thumbnail.startsWith("/") ? course.thumbnail : "/" + course.thumbnail}`}
-                  alt={course.title}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute top-3 left-3">
-                  <Badge variant="secondary" className="bg-background/90 text-foreground">
-                    {course.category}
-                  </Badge>
-                </div>
-                {course.level && (
-                  <div className="absolute top-3 right-3">
-                    <Badge 
-                      variant={course.level === 'Beginner' ? 'default' : course.level === 'Intermediate' ? 'secondary' : 'destructive'}
-                      className={course.level === 'Beginner' ? 'bg-green-500 hover:bg-green-600' : ''}
-                    >
-                      {course.level}
+            <Card key={course._id} className="group hover:shadow-medium transition-all duration-300 border-border">
+              <CardHeader className="p-0">
+                <div className="relative overflow-hidden rounded-t-lg">
+                  <img
+                    src={`http://localhost:5000${course.thumbnail.startsWith("/") ? course.thumbnail : "/" + course.thumbnail}`}
+                    alt={course.title}
+                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="secondary" className="bg-background/90 text-foreground">
+                      {course.category}
                     </Badge>
                   </div>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                {course.title}
-              </h3>
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                {course.description}
-              </p>
-              <p className="text-sm font-medium text-foreground mb-3">
-                by {typeof course.instructor === 'string' ? course.instructor : course.instructor?.name || "Instructor"}
-              </p>
-
-              <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                <div className="flex items-center space-x-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{course.rating}</span>
+                  {course.level && (
+                    <div className="absolute top-3 right-3">
+                      <Badge
+                        variant={course.level === 'Beginner' ? 'default' : course.level === 'Intermediate' ? 'secondary' : 'destructive'}
+                        className={course.level === 'Beginner' ? 'bg-green-500 hover:bg-green-600' : ''}
+                      >
+                        {course.level}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Users className="w-4 h-4" />
-                  <span>{(course.enrollments || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
-                  <span>{course.duration}</span>
-                </div>
-              </div>
+              </CardHeader>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-xl font-bold text-primary">₹{course.price}</span>
-                </div>
-              </div>
-            </CardContent>
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                  {course.title}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                  {course.description}
+                </p>
+                <p className="text-sm font-medium text-foreground mb-3">
+                  by {typeof course.instructor === 'string' ? course.instructor : course.instructor?.name || "Instructor"}
+                </p>
 
-            <CardFooter className="p-4 pt-0 flex gap-2">
-              <Button
-  className="w-1/2 bg-primary text-white"
-  onClick={() => {
-    // Prepare course object for enrollment
-    const enrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
-    // Avoid duplicate enrollments
-    if (enrolled.some((c: any) => c._id === course._id)) {
-      alert('You are already enrolled in this course!');
-      return;
-    }
-    // Add progress tracking fields
-    const enrolledCourse = {
-      ...course,
-      progress: 0,
-      totalLessons: 12,
-      completedLessons: 0,
-      timeSpent: '0h',
-      lastAccessed: new Date().toLocaleDateString(),
-      status: 'In Progress',
-      image: course.thumbnail || '/src/assets/course-programming.jpg',
-    };
-    localStorage.setItem('enrolledCourses', JSON.stringify([...enrolled, enrolledCourse]));
-    alert('Enrolled! This course will now show up in My Learning.');
-  }}
->
-  Enroll
-</Button>
-              <Link to={`/student/courses/${course._id}`} className="w-1/2">
-                <Button className="w-full bg-primary text-white">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  View Course
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
+                  <div className="flex items-center space-x-1">
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <span className="font-medium">{course.rating}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-4 h-4" />
+                    <span>{(course.enrollments || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{course.duration}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl font-bold text-primary">₹{course.price}</span>
+                  </div>
+                </div>
+              </CardContent>
+
+              <CardFooter className="p-4 pt-0 flex gap-2">
+                <Button
+                  className="w-1/2 bg-primary text-white"
+                  onClick={async () => {
+                    try {
+                      const userId = localStorage.getItem("userId");
+                      if (!userId) {
+                        alert("⚠️ Please login first");
+                        return;
+                      }
+
+                      const res = await axios.post("http://localhost:5000/api/enrollments", {
+                        userId,
+                        courseId: course._id,
+                        price: course.price,
+                      });
+
+                      alert("✅ " + res.data.message);
+                    } catch (err: any) {
+                      alert("❌ " + (err.response?.data?.message || "Enrollment failed"));
+                    }
+                  }}
+                >
+                  Enroll
                 </Button>
-              </Link>
-            </CardFooter>
-          </Card>
+
+
+                <Link to={`/student/courses/${course._id}`} className="w-1/2">
+                  <Button className="w-full bg-primary text-white">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    View Course
+                  </Button>
+                </Link>
+              </CardFooter>
+            </Card>
           ))
         )}
       </div>

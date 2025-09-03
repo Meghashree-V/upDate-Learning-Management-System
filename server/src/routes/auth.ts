@@ -58,7 +58,18 @@ router.post('/signin', async (req: Request, res: Response) => {
     if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
 
     const token = signToken({ sub: user.id, role: user.role });
-    return res.json({ token, role: user.role, user: { id: user._id, firstName: user.firstName, lastName: user.lastName, email: user.email } });
+    return res.json({
+      token,
+      role: user.role,
+      _id: user._id,   // 🔥 direct root level पर भेजा
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email
+      }
+    });
+
   } catch (err) {
     console.error('Signin error', err);
     return res.status(500).json({ message: 'Internal server error' });
