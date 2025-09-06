@@ -1,16 +1,65 @@
+import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { CourseCard } from '@/components/CourseCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, TrendingUp, Award, Users } from 'lucide-react';
+import { Star, TrendingUp, Award, Users, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getFeaturedCourses, courses } from '@/data/courses';
+import axios from 'axios';
+
+interface Course {
+  _id: string;
+  title: string;
+  description: string;
+  instructor: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  price: number;
+  level: string;
+  duration: string;
+  thumbnail?: string;
+  categories: string[];
+  enrollmentType: string;
+  capacity: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const Index = () => {
-  const featuredCourses = getFeaturedCourses();
-  const freeCourses = courses.filter(course => course.isFree);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch courses from API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_BASE_URL}/courses`);
+        setCourses(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching courses:', err);
+        setError('Failed to load courses. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Get featured courses (first 6 courses)
+  const featuredCourses = courses.slice(0, 6);
+  // Get free courses
+  const freeCourses = courses.filter(course => course.price === 0).slice(0, 6);
 
   return (
     <div className="min-h-screen bg-background">
@@ -29,11 +78,35 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {featuredCourses.map((course) => (
-              <CourseCard key={course.id} {...course} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <span className="ml-2 text-muted-foreground">Loading courses...</span>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">{error}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {featuredCourses.map((course) => (
+                <CourseCard 
+                  key={course._id}
+                  id={course._id}
+                  title={course.title}
+                  category={course.categories[0] || 'General'}
+                  instructor={course.instructor.name}
+                  price={course.price}
+                  image={course.thumbnail || '/src/assets/course-programming.jpg'}
+                  students={0}
+                  duration={course.duration}
+                  rating={4.5}
+                  level={course.level as 'Beginner' | 'Intermediate' | 'Advanced'}
+                  isFree={course.price === 0}
+                />
+              ))}
+            </div>
+          )}
           
           <div className="text-center">
             <Link to="/courses">
@@ -99,11 +172,39 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {freeCourses.map((course) => (
-              <CourseCard key={course.id} {...course} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <span className="ml-2 text-muted-foreground">Loading free courses...</span>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">{error}</p>
+            </div>
+          ) : freeCourses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {freeCourses.map((course) => (
+                <CourseCard 
+                  key={course._id}
+                  id={course._id}
+                  title={course.title}
+                  category={course.categories[0] || 'General'}
+                  instructor={course.instructor.name}
+                  price={course.price}
+                  image={course.thumbnail || '/src/assets/course-programming.jpg'}
+                  students={0}
+                  duration={course.duration}
+                  rating={4.5}
+                  level={course.level as 'Beginner' | 'Intermediate' | 'Advanced'}
+                  isFree={course.price === 0}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">No free courses available at the moment.</p>
+            </div>
+          )}
         </div>
       </section>
 

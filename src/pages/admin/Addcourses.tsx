@@ -27,9 +27,11 @@ import { useToast } from "@/hooks/use-toast";
 
 const Addcourses = () => {
   const { toast } = useToast();
+
+  // 🔹 State
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [lessons, setLessons] = useState([
-    { id: 1, title: "", duration: "", type: "video" }
+    { id: 1, title: "", duration: "", type: "video", videoFile: null as File | null }
   ]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -38,9 +40,14 @@ const Addcourses = () => {
   const [duration, setDuration] = useState("");
   const [price, setPrice] = useState("");
   const [instructor, setInstructor] = useState("");
-const [educators, setEducators] = useState<any[]>([]);
+  const [educators, setEducators] = useState<any[]>([]);
+  const [level, setLevel] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [enrollmentType, setEnrollmentType] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  // Fetch educators for instructor dropdown
+  // 🔹 Fetch educators
   useEffect(() => {
     const fetchEducators = async () => {
       try {
@@ -52,16 +59,12 @@ const [educators, setEducators] = useState<any[]>([]);
     };
     fetchEducators();
   }, []);
-  const [level, setLevel] = useState("");
-  const [capacity, setCapacity] = useState("");
-  const [enrollmentType, setEnrollmentType] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
 
   const categories = [
-    "Programming", "Design", "Marketing", "Business", "Data Science", 
+    "Programming", "Design", "Marketing", "Business", "Data Science",
     "Mobile Development", "Web Development", "AI/ML", "DevOps", "Cybersecurity"
   ];
+  // 🔹 Category management
   const addCategory = (category: string) => {
     if (!selectedCategories.includes(category)) {
       setSelectedCategories([...selectedCategories, category]);
@@ -72,10 +75,11 @@ const [educators, setEducators] = useState<any[]>([]);
     setSelectedCategories(selectedCategories.filter(cat => cat !== category));
   };
 
+  // 🔹 Lesson management
   const addLesson = () => {
     setLessons([
       ...lessons,
-      { id: lessons.length + 1, title: "", duration: "", type: "video" }
+      { id: lessons.length + 1, title: "", duration: "", type: "video", videoFile: null }
     ]);
   };
 
@@ -83,12 +87,13 @@ const [educators, setEducators] = useState<any[]>([]);
     setLessons(lessons.filter(lesson => lesson.id !== id));
   };
 
-  const updateLesson = (id: number, field: string, value: string) => {
+  const updateLesson = (id: number, field: string, value: any) => {
     setLessons(lessons.map(lesson =>
       lesson.id === id ? { ...lesson, [field]: value } : lesson
     ));
   };
 
+  // 🔹 Thumbnail upload
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -97,42 +102,75 @@ const [educators, setEducators] = useState<any[]>([]);
     }
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  // 🔹 Reset form fields
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setDuration("");
+    setPrice("");
+    setInstructor("");
+    setLevel("");
+    setCapacity("");
+    setEnrollmentType("");
+    setStartDate("");
+    setEndDate("");
+    setSelectedCategories([]);
+    setLessons([
+      { id: 1, title: "", duration: "", type: "video", videoFile: null as File | null }
+    ]);
+    setThumbnail(null);
+    setThumbnailPreview(null);
+  };
 
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("duration", duration);
-  formData.append("price", price);
-  formData.append("instructor", instructor);
-  formData.append("level", level);
-  formData.append("enrollmentType", enrollmentType);
-  formData.append("capacity", capacity);
-  formData.append("startDate", startDate);
-  formData.append("endDate", endDate);
+  // 🔹 Submit form (Backend → Cloudinary → MongoDB Atlas)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  // arrays/objects must be stringified
-  formData.append("categories", JSON.stringify(selectedCategories));
-  formData.append("lessons", JSON.stringify(lessons));
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("duration", duration);
+    formData.append("price", price);
+    formData.append("instructor", instructor);
+    formData.append("level", level);
+    formData.append("enrollmentType", enrollmentType);
+    formData.append("capacity", capacity);
+    formData.append("startDate", startDate);
+    formData.append("endDate", endDate);
+    formData.append("categories", JSON.stringify(selectedCategories));
 
-  if (thumbnail) {
-    formData.append("thumbnail", thumbnail); // 👈 must match upload.single("thumbnail")
-  }
+    // Lessons metadata (without video files)
+    const lessonsData = lessons.map(({ id, title, duration, type }) => ({
+      id, title, duration, type
+    }));
+    formData.append("lessons", JSON.stringify(lessonsData));
 
-  try {
-    await axios.post("http://localhost:5000/api/courses", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+    // Attach lesson video files
+    lessons.forEach((lesson) => {
+      if (lesson.type === "video" && lesson.videoFile) {
+        formData.append("lessonVideos", lesson.videoFile);
+      }
     });
-    toast({ title: "Success", description: "Course created successfully!" });
-  } catch (err: any) {
-    console.error("Error creating course:", err);
-    toast({ title: "Error", description: err.response?.data?.error || "Failed to create course" });
-  }
-};
 
+    // Attach thumbnail
+    if (thumbnail) {
+      formData.append("thumbnail", thumbnail);
+    }
+
+    try {
+      await axios.post("http://localhost:5000/api/courses", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      toast({ title: "✅ Success", description: "Course created successfully!" });
+      resetForm(); // Reset all form fields after successful creation
+    } catch (err: any) {
+      console.error("Error creating course:", err);
+      toast({
+        title: "❌ Error",
+        description: err.response?.data?.error || "Failed to create course"
+      });
+    }
+  };
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -153,7 +191,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
 
-          {/* Basic Info */}
+          {/* 🔹 Basic Info */}
           <TabsContent value="basic" className="space-y-6">
             <Card>
               <CardHeader>
@@ -177,21 +215,26 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <div className="space-y-2">
                     <Label htmlFor="instructor">Instructor *</Label>
                     <Select value={instructor} onValueChange={setInstructor}>
-  <SelectTrigger>
-    <SelectValue placeholder="Select instructor" />
-  </SelectTrigger>
-  <SelectContent>
-    {educators.length === 0 ? (
-      <SelectItem value="none" disabled>No instructors available</SelectItem>
-    ) : (
-      educators.map((e: any) => (
-        <SelectItem key={e._id} value={e._id}>{e.name}</SelectItem>
-      ))
-    )}
-  </SelectContent>
-</Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select instructor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {educators.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            No instructors available
+                          </SelectItem>
+                        ) : (
+                          educators.map((e: any) => (
+                            <SelectItem key={e._id} value={e._id}>
+                              {e.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="description">Course Description *</Label>
                   <Textarea
@@ -216,7 +259,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                       required
                     />
                   </div>
-                  
                   <div className="space-y-2">
                     <Label htmlFor="price">Price (₹) *</Label>
                     <Input
@@ -230,7 +272,8 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </div>
                 </div>
 
-                 <div className="space-y-2">
+                {/* Categories */}
+                <div className="space-y-2">
                   <Label>Categories</Label>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {selectedCategories.map((category) => (
@@ -261,6 +304,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </Select>
                 </div>
 
+                {/* Thumbnail */}
                 <div className="space-y-2">
                   <Label>Course Thumbnail</Label>
                   <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
@@ -286,7 +330,8 @@ const handleSubmit = async (e: React.FormEvent) => {
               </CardContent>
             </Card>
           </TabsContent>
-          {/* Course Content */}
+
+          {/* 🔹 Course Content */}
           <TabsContent value="content" className="space-y-6">
             <Card>
               <CardHeader>
@@ -296,12 +341,12 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {lessons.map((lesson, index) => (
+                {lessons.map((lesson) => (
                   <div
                     key={lesson.id}
-                    className="flex flex-col md:flex-row gap-4 items-center border p-4 rounded-lg"
+                    className="flex flex-col md:flex-row gap-4 items-center border p-4 rounded-lg w-full"
                   >
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-2 w-full">
                       <Input
                         placeholder="Lesson Title"
                         value={lesson.title}
@@ -332,6 +377,24 @@ const handleSubmit = async (e: React.FormEvent) => {
                           <SelectItem value="assignment">Assignment</SelectItem>
                         </SelectContent>
                       </Select>
+
+                      {/* 🔹 Video Upload */}
+                      {lesson.type === "video" && (
+                        <div className="mt-2">
+                          <Label>Upload Video</Label>
+                          <Input
+                            type="file"
+                            accept="video/*"
+                            onChange={(e) =>
+                              updateLesson(
+                                lesson.id,
+                                "videoFile",
+                                e.target.files?.[0] || null
+                              )
+                            }
+                          />
+                        </div>
+                      )}
                     </div>
                     <Button
                       type="button"
@@ -348,7 +411,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               </CardContent>
             </Card>
           </TabsContent>
-          {/* Settings */}
+          {/* 🔹 Settings */}
           <TabsContent value="settings" className="space-y-6">
             <Card>
               <CardHeader>
@@ -360,8 +423,8 @@ const handleSubmit = async (e: React.FormEvent) => {
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Level *</Label>
-                    <Select onValueChange={setLevel}>
+                    <Label htmlFor="level">Level *</Label>
+                    <Select value={level} onValueChange={setLevel}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select level" />
                       </SelectTrigger>
@@ -369,40 +432,42 @@ const handleSubmit = async (e: React.FormEvent) => {
                         <SelectItem value="beginner">Beginner</SelectItem>
                         <SelectItem value="intermediate">Intermediate</SelectItem>
                         <SelectItem value="advanced">Advanced</SelectItem>
-                        <SelectItem value="assignment">Assignment</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
-                    <Label>Enrollment Type *</Label>
-                    <Select onValueChange={setEnrollmentType}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select enrollment type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="open">Open Enrollment</SelectItem>
-                        <SelectItem value="approval">Requires Approval</SelectItem>
-                        <SelectItem value="invite">Invite Only</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Capacity *</Label>
+                    <Label htmlFor="capacity">Capacity *</Label>
                     <Input
+                      id="capacity"
                       type="number"
-                      placeholder="Max students"
+                      placeholder="Max number of students"
                       value={capacity}
                       onChange={(e) => setCapacity(e.target.value)}
                       required
                     />
                   </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Start Date *</Label>
+                    <Label htmlFor="enrollmentType">Enrollment Type *</Label>
+                    <Select
+                      value={enrollmentType}
+                      onValueChange={setEnrollmentType}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="restricted">Restricted</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="startDate">Start Date *</Label>
                     <Input
+                      id="startDate"
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
@@ -410,8 +475,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>End Date *</Label>
+                    <Label htmlFor="endDate">End Date *</Label>
                     <Input
+                      id="endDate"
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
@@ -422,59 +488,50 @@ const handleSubmit = async (e: React.FormEvent) => {
               </CardContent>
             </Card>
           </TabsContent>
-          {/* Preview */}
+
+          {/* 🔹 Preview */}
           <TabsContent value="preview" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="h-5 w-5" />
-                  Preview
+                  Course Preview
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <h2 className="text-xl font-bold">{title || "Course Title"}</h2>
-                <p className="text-muted-foreground">{description || "Course description will appear here."}</p>
-                <p><strong>Instructor:</strong> {instructor || "N/A"}</p>
+                <h2 className="text-xl font-semibold">{title || "Untitled Course"}</h2>
+                <p className="text-muted-foreground">{description || "No description yet."}</p>
+                {thumbnailPreview && (
+                  <img
+                    src={thumbnailPreview}
+                    alt="Course thumbnail"
+                    className="h-40 w-40 object-cover rounded-md"
+                  />
+                )}
                 <p><strong>Duration:</strong> {duration || "N/A"} hours</p>
-                <p><strong>Price:</strong> ${price || "0.00"}</p>
+                <p><strong>Price:</strong> ₹{price || "N/A"}</p>
                 <p><strong>Level:</strong> {level || "N/A"}</p>
-                <p><strong>Enrollment Type:</strong> {enrollmentType || "N/A"}</p>
                 <p><strong>Capacity:</strong> {capacity || "N/A"}</p>
-                <p><strong>Start:</strong> {startDate || "N/A"} - <strong>End:</strong> {endDate || "N/A"}</p>
-                <div>
-                  <strong>Categories:</strong>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {selectedCategories.map((cat, i) => (
-                      <Badge key={i}>{cat}</Badge>
-                    ))}
-                  </div>
-                </div>
+                <p><strong>Enrollment Type:</strong> {enrollmentType || "N/A"}</p>
+                <p><strong>Dates:</strong> {startDate || "?"} - {endDate || "?"}</p>
                 <div>
                   <strong>Lessons:</strong>
-                  <ul className="list-disc ml-6 mt-2 space-y-1">
+                  <ul className="list-disc pl-5">
                     {lessons.map((lesson) => (
-                      <li key={lesson.id}>
-                        {lesson.title || "Untitled"} - {lesson.duration || "0"} mins ({lesson.type})
-                      </li>
+                      <li key={lesson.id}>{lesson.title || "Untitled Lesson"}</li>
                     ))}
                   </ul>
                 </div>
-                {thumbnailPreview && (
-                  <div className="mt-4">
-                    <img
-                      src={thumbnailPreview}
-                      alt="Course Thumbnail"
-                      className="h-40 w-40 object-cover rounded-md"
-                    />
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
 
+        {/* 🔹 Submit Button */}
         <div className="flex justify-end mt-6">
-          <Button type="submit" className="px-6">Create Course</Button>
+          <Button type="submit" className="px-6 py-2 text-lg">
+            Create Course
+          </Button>
         </div>
       </form>
     </div>

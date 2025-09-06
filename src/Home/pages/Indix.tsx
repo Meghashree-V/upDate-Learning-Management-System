@@ -1,14 +1,59 @@
-import { ArrowRight, BookOpen, Users, Award, TrendingUp, Star } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowRight, BookOpen, Users, Award, TrendingUp, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { courses } from "@/data/courses";
+import axios from "axios";
+
+interface Course {
+  _id: string;
+  title: string;
+  description: string;
+  instructor: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  price: number;
+  level: string;
+  duration: string;
+  thumbnail?: string;
+  categories: string[];
+  enrollmentType: string;
+  capacity: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
+const API_BASE_URL = 'http://localhost:5000/api';
 
 const Indix = () => {
-  // Pick top 3 by most enrolled (students). Data will be added later; safe when empty.
-  const featuredCourses = [...courses]
-    .sort((a, b) => (b.students || 0) - (a.students || 0))
-    .slice(0, 3);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch courses from API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_BASE_URL}/courses`);
+        setCourses(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching courses:', err);
+        setError('Failed to load courses. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Get featured courses (first 3 courses)
+  const featuredCourses = courses.slice(0, 3);
 
   return (
     <div className="min-h-screen">
@@ -126,46 +171,59 @@ const Indix = () => {
             <p className="text-xl text-white/90">Start your learning journey with our most popular courses</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredCourses.length === 0 ? (
-              <div className="col-span-full text-center text-white/90">
-                No featured courses available.
-              </div>
-            ) : (
-              featuredCourses.map((course) => (
-                <Card key={course.id} className="hover:shadow-medium transition-shadow">
-                  <CardHeader className="p-0">
-                    <img
-                      src={course.image}
-                      alt={course.title}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-2">{course.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-3">by {course.instructor || "Instructor"}</p>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium">{course.rating}</span>
+          {loading ? (
+            <div className="flex justify-center items-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+              <span className="ml-2 text-white/90">Loading courses...</span>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-white/90">{error}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {featuredCourses.length === 0 ? (
+                <div className="col-span-full text-center text-white/90">
+                  No featured courses available.
+                </div>
+              ) : (
+                featuredCourses.map((course) => (
+                  <Card key={course._id} className="hover:shadow-medium transition-shadow">
+                    <CardHeader className="p-0">
+                      <img
+                        src={course.thumbnail || '/src/assets/course-programming.jpg'}
+                        alt={course.title}
+                        className="w-full h-48 object-cover rounded-t-lg"
+                      />
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg mb-2 line-clamp-2">{course.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">by {course.instructor.name}</p>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-sm font-medium">4.5</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {course.capacity} capacity
+                        </span>
                       </div>
-                      <span className="text-sm text-white/90">
-                        {course.students.toLocaleString()} students
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-bold text-primary">{course.price}</span>
-                      <Link to={`/student/courses/${course.id}`}>
-                        <Button size="sm" className="bg-gradient-primary:bg-primary-hover text-white">
-                          View Course
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xl font-bold text-primary">
+                          {course.price === 0 ? 'Free' : `₹${course.price}`}
+                        </span>
+                        <Link to={`/student/courses/${course._id}`}>
+                          <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                            View Course
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
           
           <div className="text-center mt-12">
             <Link to="/student/courses">

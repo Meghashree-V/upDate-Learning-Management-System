@@ -12,15 +12,21 @@ interface BackendCourse {
   _id: string;
   title: string;
   description: string;
-  instructor: { name: string } | string;
+  instructor: {
+    _id: string;
+    name: string;
+    email: string;
+  };
   price: number;
-  category: string;
-  thumbnail: string;
-  status: string;
-  enrollments: number;
+  level: string;
   duration: string;
-  rating: number;
-  level?: string; // Optional field
+  thumbnail?: string;
+  categories: string[];
+  enrollmentType: string;
+  capacity: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
 }
 
 const CourseList = () => {
@@ -32,116 +38,16 @@ const CourseList = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Dummy courses for a full grid
-    const dummyCourses: BackendCourse[] = [
-      {
-        _id: 'd1',
-        title: 'Advanced Python',
-        description: 'Advance your Python skills with real-world projects.',
-        instructor: { name: 'Instructor' },
-        price: 350,
-        category: 'Programming',
-        thumbnail: '/src/assets/course-programming.jpg',
-        status: 'published',
-        enrollments: 0,
-        duration: '10h 30m',
-        rating: 4.7,
-        level: 'Beginner',
-      },
-      {
-        _id: 'd2',
-        title: 'Data Analytics',
-        description: 'This course introduces students to data analytics concepts, tools, and techniques. Students will learn data wrangling, visualization, and analysis.',
-        instructor: { name: 'Neha K' },
-        price: 98,
-        category: 'Data Science',
-        thumbnail: '/src/assets/course-data-science.jpg',
-        status: 'published',
-        enrollments: 0,
-        duration: '20h',
-        rating: 4.6,
-        level: 'Beginner',
-      },
-      {
-        _id: 'd3',
-        title: 'UI/UX Design Essentials',
-        description: 'Master the basics of UI/UX design, wireframing, and prototyping.',
-        instructor: { name: 'Jessica Park' },
-        price: 799,
-        category: 'Design',
-        thumbnail: '/src/assets/course-design.jpg',
-        status: 'published',
-        enrollments: 0,
-        duration: '8h 15m',
-        rating: 4.5,
-        level: 'Intermediate',
-      },
-      {
-        _id: 'd4',
-        title: 'Digital Marketing 2024',
-        description: 'Learn digital marketing strategies, SEO, and social media advertising.',
-        instructor: { name: 'Ravi Singh' },
-        price: 499,
-        category: 'Marketing',
-        thumbnail: '/src/assets/course-marketing.jpg',
-        status: 'published',
-        enrollments: 0,
-        duration: '12h',
-        rating: 4.8,
-        level: 'Advanced',
-      },
-      {
-        _id: 'd5',
-        title: 'The Complete Python Pro Bootcamp',
-        description: 'Become a Python pro with this comprehensive bootcamp.',
-        instructor: { name: 'Angela Yu' },
-        price: 1999,
-        category: 'Programming',
-        thumbnail: '/src/assets/course-programming.jpg',
-        status: 'published',
-        enrollments: 0,
-        duration: '24h',
-        rating: 4.9,
-        level: 'Intermediate',
-      },
-      {
-        _id: 'd6',
-        title: 'Flutter & Dart - The Complete Guide',
-        description: 'Build beautiful native apps for iOS and Android with Flutter & Dart.',
-        instructor: { name: 'Maximilian Schwarzmüller' },
-        price: 2499,
-        category: 'Mobile Development',
-        thumbnail: '/src/assets/course-programming.jpg',
-        status: 'published',
-        enrollments: 0,
-        duration: '40h',
-        rating: 4.8,
-        level: 'Advanced',
-      },
-      {
-        _id: 'd7',
-        title: 'AWS Certified Cloud Practitioner',
-        description: 'Prepare for the AWS Cloud Practitioner exam with hands-on labs.',
-        instructor: { name: 'Stephane Maarek' },
-        price: 899,
-        category: 'Data Science',
-        thumbnail: '/src/assets/course-data-science.jpg',
-        status: 'published',
-        enrollments: 0,
-        duration: '14h',
-        rating: 4.7,
-        level: 'Intermediate',
-      },
-    ];
     const fetchCourses = async () => {
       try {
         setLoading(true);
         const res = await axios.get("http://localhost:5000/api/courses");
-        setCourses([...(res.data || []), ...dummyCourses]);
+        setCourses(res.data || []);
         setError(null);
       } catch (err) {
-        setCourses([...dummyCourses]);
-        setError("Failed to fetch courses. Showing demo courses.");
+        console.error('Error fetching courses:', err);
+        setError("Failed to fetch courses. Please try again later.");
+        setCourses([]);
       } finally {
         setLoading(false);
       }
@@ -158,7 +64,7 @@ const CourseList = () => {
       filtered = filtered.filter(course =>
         course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (course.description?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
-        (typeof course.instructor === 'string' ? course.instructor.toLowerCase().includes(searchQuery.toLowerCase()) : course.instructor?.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        course.instructor.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -166,7 +72,7 @@ const CourseList = () => {
     const category = searchParams.get("category");
     if (category) {
       filtered = filtered.filter(course =>
-        course.category.toLowerCase() === category.toLowerCase()
+        course.categories.some(cat => cat.toLowerCase() === category.toLowerCase())
       );
     }
 
@@ -174,9 +80,9 @@ const CourseList = () => {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "rating":
-          return b.rating - a.rating;
+          return 4.5 - 4.5; // Default rating since not in API
         case "students":
-          return b.enrollments - a.enrollments;
+          return b.capacity - a.capacity; // Use capacity instead
         case "price":
           return (a.price ?? 0) - (b.price ?? 0);
         default:
@@ -241,13 +147,13 @@ const CourseList = () => {
               <CardHeader className="p-0">
                 <div className="relative overflow-hidden rounded-t-lg">
                   <img
-                    src={`http://localhost:5000${course.thumbnail.startsWith("/") ? course.thumbnail : "/" + course.thumbnail}`}
+                    src={course.thumbnail || '/src/assets/course-programming.jpg'}
                     alt={course.title}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3">
                     <Badge variant="secondary" className="bg-background/90 text-foreground">
-                      {course.category}
+                      {course.categories[0] || 'General'}
                     </Badge>
                   </div>
                   {course.level && (
@@ -271,17 +177,17 @@ const CourseList = () => {
                   {course.description}
                 </p>
                 <p className="text-sm font-medium text-foreground mb-3">
-                  by {typeof course.instructor === 'string' ? course.instructor : course.instructor?.name || "Instructor"}
+                  by {course.instructor.name}
                 </p>
 
                 <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                   <div className="flex items-center space-x-1">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-medium">{course.rating}</span>
+                    <span className="font-medium">4.5</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Users className="w-4 h-4" />
-                    <span>{(course.enrollments || 0).toLocaleString()}</span>
+                    <span>{course.capacity.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
