@@ -19,10 +19,10 @@ This project aims to provide an intuitive platform for managing courses, instruc
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** React, TypeScript, Vite  
+- **Frontend:** React,Node.js, TypeScript, Vite  
 - **UI Framework:** Tailwind CSS, shadcn-ui  
 - **State Management:** React Hooks / Context API  
-- **Deployment:** Lovable.dev (supports custom domain)  
+- **Deployment:** Netlify (supports custom domain)  
 
 ---
 
